@@ -1,0 +1,25 @@
+---
+# Where the service lives on the tower Pi
+ir_artnet_dir: /opt/ir-artnet
+ir_artnet_user: pi
+
+# IR output
+ir_gpio_pin: 18                 # gpio-ir-tx pin -> MOSFET gate
+lirc_device: /dev/lirc0
+transmit_backend: ir-ctl        # ir-ctl (canonical) | pigpio
+
+# Bookworm uses /boot/firmware/config.txt; older Raspbian uses /boot/config.txt
+boot_config_path: /boot/firmware/config.txt
+
+# Art-Net identity (override per host in host_vars)
+artnet_universe: 0
+tower_short_name: "Tower-IR"
+tower_long_name: "Tower IR blaster (candles)"
+
+# Enabling the gpio-ir-tx overlay needs a reboot to create /dev/lirc0.
+# Set true to let Ansible reboot the tower automatically.
+allow_reboot: false
+
+# WiFi is configured only when wifi_ssid is defined (see group_vars).
+wifi_ifname: wlan0
+wifi_conn_name: show-wifi

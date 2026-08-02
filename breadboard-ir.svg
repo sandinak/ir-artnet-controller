@@ -1,0 +1,80 @@
+<svg viewBox="0 0 960 640" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, sans-serif" role="img">
+<title>Tower IR driver — breadboard wiring</title>
+<desc>Breadboard build of the tower IR driver: Pi GPIO18 through a 220 ohm gate resistor into an IRLB8721 logic-level MOSFET (TO-220), 10k gate pulldown, source to the negative rail, drain switching an IR LED string fed from a 12V bench supply. Pi ground and 12V ground share the negative rail.</desc>
+<rect x="0" y="0" width="960" height="640" fill="#ffffff"/>
+<rect x="24" y="250" width="150" height="150" rx="10" fill="#eef1f4" stroke="#8a8a8a"/>
+<text x="99" y="276" fill="#222" font-size="13" font-weight="700" text-anchor="middle">Raspberry Pi</text>
+<text x="99" y="292" fill="#666" font-size="9" text-anchor="middle">gpio-ir-tx on GPIO18</text>
+<circle cx="174" cy="320" r="4" fill="#e8811f"/><text x="164" y="324" fill="#222" font-size="11" text-anchor="end" font-weight="700">GPIO18</text>
+<circle cx="174" cy="360" r="4" fill="#111"/><text x="164" y="364" fill="#222" font-size="11" text-anchor="end" font-weight="700">GND</text>
+<rect x="24" y="80" width="150" height="70" rx="10" fill="#eef1f4" stroke="#8a8a8a"/>
+<text x="99" y="106" fill="#222" font-size="13" font-weight="700" text-anchor="middle">12 V bench PSU</text>
+<circle cx="174" cy="120" r="4" fill="#d23b2b"/><text x="164" y="124" fill="#222" font-size="11" text-anchor="end" font-weight="700">+12V</text>
+<circle cx="150" cy="150" r="4" fill="#111"/><text x="140" y="150" fill="#222" font-size="10" text-anchor="end">GND</text>
+<rect x="210" y="70" width="730" height="500" rx="12" fill="#f2eee3" stroke="#c9c1ab" stroke-width="2"/>
+<rect x="230" y="92" width="690" height="6" rx="3" fill="#d23b2b"/><text x="224" y="98" fill="#d23b2b" font-size="12" text-anchor="end" font-weight="700">+</text>
+<rect x="230" y="112" width="690" height="6" rx="3" fill="#2b6fd2"/><text x="224" y="118" fill="#2b6fd2" font-size="12" text-anchor="end" font-weight="700">–</text>
+<rect x="230" y="524" width="690" height="6" rx="3" fill="#d23b2b"/>
+<rect x="230" y="544" width="690" height="6" rx="3" fill="#2b6fd2"/><text x="224" y="550" fill="#2b6fd2" font-size="12" text-anchor="end" font-weight="700">–</text>
+<g fill="#d8d1bd">
+<g><circle cx="260" cy="230" r="3"/><circle cx="290" cy="230" r="3"/><circle cx="320" cy="230" r="3"/><circle cx="350" cy="230" r="3"/><circle cx="380" cy="230" r="3"/><circle cx="410" cy="230" r="3"/><circle cx="440" cy="230" r="3"/><circle cx="470" cy="230" r="3"/><circle cx="500" cy="230" r="3"/><circle cx="530" cy="230" r="3"/><circle cx="560" cy="230" r="3"/><circle cx="590" cy="230" r="3"/><circle cx="620" cy="230" r="3"/><circle cx="650" cy="230" r="3"/><circle cx="680" cy="230" r="3"/><circle cx="710" cy="230" r="3"/></g>
+<g><circle cx="260" cy="260" r="3"/><circle cx="290" cy="260" r="3"/><circle cx="320" cy="260" r="3"/><circle cx="350" cy="260" r="3"/><circle cx="380" cy="260" r="3"/><circle cx="410" cy="260" r="3"/><circle cx="440" cy="260" r="3"/><circle cx="470" cy="260" r="3"/><circle cx="500" cy="260" r="3"/><circle cx="530" cy="260" r="3"/><circle cx="560" cy="260" r="3"/><circle cx="590" cy="260" r="3"/><circle cx="620" cy="260" r="3"/><circle cx="650" cy="260" r="3"/><circle cx="680" cy="260" r="3"/><circle cx="710" cy="260" r="3"/></g>
+<g><circle cx="260" cy="290" r="3"/><circle cx="290" cy="290" r="3"/><circle cx="320" cy="290" r="3"/><circle cx="350" cy="290" r="3"/><circle cx="380" cy="290" r="3"/><circle cx="410" cy="290" r="3"/><circle cx="440" cy="290" r="3"/><circle cx="470" cy="290" r="3"/><circle cx="500" cy="290" r="3"/><circle cx="530" cy="290" r="3"/><circle cx="560" cy="290" r="3"/><circle cx="590" cy="290" r="3"/><circle cx="620" cy="290" r="3"/><circle cx="650" cy="290" r="3"/><circle cx="680" cy="290" r="3"/><circle cx="710" cy="290" r="3"/></g>
+</g>
+<text x="770" y="300" fill="#a99f86" font-size="11" font-style="italic">center trench</text>
+<line x1="230" y1="320" x2="770" y2="320" stroke="#d8d1bd" stroke-width="2" stroke-dasharray="3 5"/>
+<g fill="#d8d1bd">
+<g><circle cx="260" cy="350" r="3"/><circle cx="290" cy="350" r="3"/><circle cx="320" cy="350" r="3"/><circle cx="350" cy="350" r="3"/><circle cx="380" cy="350" r="3"/><circle cx="410" cy="350" r="3"/><circle cx="440" cy="350" r="3"/><circle cx="470" cy="350" r="3"/><circle cx="500" cy="350" r="3"/><circle cx="530" cy="350" r="3"/><circle cx="560" cy="350" r="3"/><circle cx="590" cy="350" r="3"/><circle cx="620" cy="350" r="3"/></g>
+<g><circle cx="260" cy="380" r="3"/><circle cx="290" cy="380" r="3"/><circle cx="320" cy="380" r="3"/><circle cx="350" cy="380" r="3"/><circle cx="380" cy="380" r="3"/><circle cx="410" cy="380" r="3"/><circle cx="440" cy="380" r="3"/><circle cx="470" cy="380" r="3"/><circle cx="500" cy="380" r="3"/><circle cx="530" cy="380" r="3"/><circle cx="560" cy="380" r="3"/><circle cx="590" cy="380" r="3"/><circle cx="620" cy="380" r="3"/></g>
+</g>
+<polyline points="174,320 230,320 260,320 260,290" fill="none" stroke="#e8811f" stroke-width="2.5"/>
+<polyline points="174,360 200,360 200,545 230,545" fill="none" stroke="#111" stroke-width="2.5"/>
+<polyline points="174,120 196,120 196,95 230,95" fill="none" stroke="#d23b2b" stroke-width="2.5"/>
+<rect x="272" y="222" width="66" height="14" rx="4" fill="#e7dcc2" stroke="#8a7a52"/>
+<rect x="286" y="222" width="4" height="14" fill="#6b3b1f"/><rect x="298" y="222" width="4" height="14" fill="#111"/><rect x="310" y="222" width="4" height="14" fill="#c39a2b"/>
+<text x="305" y="214" fill="#222" font-size="10" text-anchor="middle" font-weight="700">R1 220Ω</text>
+<line x1="260" y1="230" x2="272" y2="229" stroke="#333" stroke-width="2"/>
+<line x1="338" y1="229" x2="350" y2="230" stroke="#333" stroke-width="2"/>
+<line x1="350" y1="230" x2="350" y2="350" stroke="#e8811f" stroke-width="2.5"/>
+<rect x="330" y="392" width="170" height="46" rx="6" fill="#1b1b1b"/>
+<rect x="378" y="386" width="74" height="8" rx="2" fill="#9aa0a6"/>
+<text x="415" y="420" fill="#fff" font-size="12" text-anchor="middle" font-weight="700">Q1  IRLB8721 (TO-220)</text>
+<line x1="350" y1="380" x2="350" y2="392" stroke="#9aa0a6" stroke-width="3"/>
+<line x1="410" y1="380" x2="410" y2="392" stroke="#9aa0a6" stroke-width="3"/>
+<line x1="470" y1="380" x2="470" y2="392" stroke="#9aa0a6" stroke-width="3"/>
+<text x="350" y="452" fill="#333" font-size="10" text-anchor="middle" font-weight="700">G</text>
+<text x="410" y="452" fill="#333" font-size="10" text-anchor="middle" font-weight="700">D</text>
+<text x="470" y="452" fill="#333" font-size="10" text-anchor="middle" font-weight="700">S</text>
+<rect x="300" y="470" width="14" height="46" rx="4" fill="#e7dcc2" stroke="#8a7a52"/>
+<line x1="350" y1="380" x2="350" y2="464" stroke="#e8811f" stroke-width="2.5"/>
+<polyline points="350,464 307,464 307,470" fill="none" stroke="#e8811f" stroke-width="2.5"/>
+<line x1="307" y1="516" x2="307" y2="545" stroke="#2b6fd2" stroke-width="2.5"/>
+<text x="290" y="494" fill="#222" font-size="10" text-anchor="end" font-weight="700">R2 10k</text>
+<polyline points="470,380 470,545 470,545" fill="none" stroke="#111" stroke-width="2.5"/>
+<line x1="410" y1="380" x2="410" y2="350" stroke="#8a4fb0" stroke-width="2.5"/>
+<polyline points="410,350 560,350 560,290" fill="none" stroke="#8a4fb0" stroke-width="2.5"/>
+<line x1="620" y1="95" x2="620" y2="200" stroke="#d23b2b" stroke-width="2.5"/>
+<rect x="613" y="200" width="14" height="40" rx="4" fill="#e7dcc2" stroke="#8a7a52"/>
+<text x="640" y="224" fill="#222" font-size="10" font-weight="700">R3 8.2Ω 5W</text>
+<line x1="620" y1="240" x2="620" y2="255" stroke="#d23b2b" stroke-width="2.5"/>
+<polygon points="610,255 630,255 620,273" fill="#b03a86"/><line x1="608" y1="275" x2="632" y2="275" stroke="#b03a86" stroke-width="3"/>
+<line x1="620" y1="275" x2="620" y2="290" stroke="#b03a86" stroke-width="2.5"/>
+<polygon points="610,290 630,290 620,308" fill="#b03a86"/><line x1="608" y1="310" x2="632" y2="310" stroke="#b03a86" stroke-width="3"/>
+<polyline points="620,310 620,350 560,350" fill="none" stroke="#8a4fb0" stroke-width="2.5"/>
+<text x="662" y="285" fill="#222" font-size="10">2× IR LED</text>
+<text x="662" y="299" fill="#666" font-size="9">(850 nm, test)</text>
+<rect x="700" y="360" width="150" height="60" rx="8" fill="none" stroke="#8a8a8a" stroke-dasharray="4 4"/>
+<text x="775" y="384" fill="#222" font-size="11" text-anchor="middle" font-weight="700">→ full emitter head</text>
+<text x="775" y="400" fill="#666" font-size="9" text-anchor="middle">3–4 parallel strings</text>
+<text x="775" y="412" fill="#666" font-size="9" text-anchor="middle">LED+ = +rail · LED– = drain</text>
+<rect x="24" y="430" width="150" height="180" rx="10" fill="none" stroke="#8a8a8a"/>
+<text x="36" y="452" fill="#222" font-size="11" font-weight="700">Wires</text>
+<line x1="36" y1="468" x2="60" y2="468" stroke="#e8811f" stroke-width="4"/><text x="66" y="472" fill="#555" font-size="10">GPIO/gate</text>
+<line x1="36" y1="488" x2="60" y2="488" stroke="#111" stroke-width="4"/><text x="66" y="492" fill="#555" font-size="10">ground (–)</text>
+<line x1="36" y1="508" x2="60" y2="508" stroke="#d23b2b" stroke-width="4"/><text x="66" y="512" fill="#555" font-size="10">+12 V</text>
+<line x1="36" y1="528" x2="60" y2="528" stroke="#8a4fb0" stroke-width="4"/><text x="66" y="532" fill="#555" font-size="10">LED– (drain)</text>
+<text x="36" y="556" fill="#222" font-size="9">Pi GND + 12V GND</text>
+<text x="36" y="568" fill="#222" font-size="9">share the – rail.</text>
+<text x="36" y="586" fill="#b06a10" font-size="9">Prod HAT: AO3400A</text>
+<text x="36" y="598" fill="#b06a10" font-size="9">(SMD) replaces Q1.</text>
+</svg>

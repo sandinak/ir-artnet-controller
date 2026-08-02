@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Editor / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Local operator files (keep the sample, ignore real captures if you prefer)
+# remotes/*.ir      # uncomment to keep captured remotes out of git
+
+# Ansible local copies
+ansible/inventory.ini
+ansible/host_vars/*.yml
+!ansible/host_vars/*.example
+*.retry

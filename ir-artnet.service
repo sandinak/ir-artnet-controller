@@ -1,0 +1,18 @@
+[Unit]
+Description=ArtNet IR Blaster
+After=network-online.target
+Wants=network-online.target
+# Default backend is ir-ctl (gpio-ir-tx / /dev/lirc0); no pigpiod needed.
+# If you switch transmitter.backend to pigpio, add:  Requires=pigpiod.service
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/ir-artnet
+ExecStart=/usr/bin/python3 -m ir_artnet --config /opt/ir-artnet/config.yaml
+Restart=on-failure
+RestartSec=3
+# Art-Net is UDP/6454; no special caps needed for a normal (>1024) socket.
+
+[Install]
+WantedBy=multi-user.target

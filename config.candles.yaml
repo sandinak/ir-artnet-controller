@@ -1,0 +1,95 @@
+# =====================================================================
+#  Tower IR blaster — flameless candle control (Dance Hysteria)
+#  Run:  python3 -m ir_artnet --config config.candles.yaml
+#  DMX channels are 1-based, like the desk. See DMX-CHART.md.
+# =====================================================================
+
+artnet:
+  universe: 0                 # set to the tower's Art-Net universe
+  bind_ip: "0.0.0.0"
+  short_name: "Tower-IR"
+  long_name: "Tower IR blaster (candles)"
+
+transmitter:
+  backend: ir-ctl             # canonical: gpio-ir-tx + ir-ctl
+  lirc_device: /dev/lirc0     # dtoverlay=gpio-ir-tx,gpio_pin=18 in config.txt
+  gpio_pin: 18                # (used only if backend: pigpio)
+  min_gap_ms: 60
+
+ir_files:
+  candles: "remotes/candles.ir"
+
+# ---------------------------------------------------------------------
+# HELD-LOOK cues (mode: rate).  You hold the channel at a level on the
+# desk; the daemon keeps RE-TRANSMITTING the command while it's held so
+# cast turning in place catch it as they come around.  The DMX value
+# scales the retransmit rate:
+#     value < floor  -> off
+#     value == floor -> min_hz   (slow steady "reminder" pulses)
+#     value == 255   -> max_hz   (rapid, for fast choreography)
+#     curve > 1      -> finer control at the bottom of the fader
+#     jitter_ms      -> random timing so two towers don't fire in lockstep
+#     repeats        -> IR shots per pulse (extra insurance)
+# ---------------------------------------------------------------------
+channels:
+  - channel: 1                # ALL CANDLES ON  — hold the look
+    mode: rate
+    command: "candles:ON"
+    floor: 8                  # below ~3% = off
+    min_hz: 0.5               # held low: one reminder every 2 s
+    max_hz: 6                 # held full: 6×/s for turn-heavy moments
+    curve: 2.0
+    jitter_ms: 30
+    repeats: 1
+
+  - channel: 2                # ALL CANDLES OFF — hold to keep them dark
+    mode: rate                # (re-sends OFF so late-turning candles catch it)
+    command: "candles:OFF"
+    priority: true            # blackout jumps ahead of queued ON/flicker pulses
+    floor: 8
+    min_hz: 0.5
+    max_hz: 6
+    curve: 2.0
+    jitter_ms: 30
+
+  - channel: 3                # FLICKER — hold the look
+    mode: rate
+    command: "candles:FLICKER"
+    floor: 8
+    min_hz: 0.5
+    max_hz: 4
+    curve: 2.0
+    jitter_ms: 30
+
+  - channel: 4                # STEADY — hold the look
+    mode: rate
+    command: "candles:STEADY"
+    floor: 8
+    min_hz: 0.5
+    max_hz: 4
+    curve: 2.0
+    jitter_ms: 30
+
+  # Dimming: fader value = presses/sec from zero (min_hz 0, no dead-zone hold).
+  - channel: 5                # DIM UP  (hold to nudge brighter)
+    mode: rate
+    command: "candles:DIM_UP"
+    floor: 1
+    min_hz: 0
+    max_hz: 5
+
+  - channel: 6                # DIM DOWN (hold to nudge dimmer)
+    mode: rate
+    command: "candles:DIM_DOWN"
+    floor: 1
+    min_hz: 0
+    max_hz: 5
+
+  # One selector channel + a GO channel picks a timer preset (saves channels).
+  - channel: 10               # TIMER selector: value chooses preset
+    mode: index
+    go_channel: 11            # rising edge here fires the selected preset
+    go_threshold: 128
+    table:
+      "1-127":   "candles:TIMER_4H"
+      "128-255": "candles:TIMER_8H"

@@ -1,0 +1,77 @@
+# MANAGED BY ANSIBLE (role: ir_artnet_tower) — edit vars, not this file.
+artnet:
+  universe: {{ artnet_universe }}
+  bind_ip: "0.0.0.0"
+  short_name: "{{ tower_short_name }}"
+  long_name: "{{ tower_long_name }}"
+
+transmitter:
+  backend: {{ transmit_backend }}
+  lirc_device: {{ lirc_device }}
+  gpio_pin: {{ ir_gpio_pin }}
+  min_gap_ms: 60
+
+ir_files:
+  candles: "remotes/candles.ir"
+
+# Held-look cues (rate): DMX value scales the retransmit rate so cast turning
+# in place catch the IR as they come around. See DMX-CHART.md.
+channels:
+  - channel: 1            # ALL ON — hold the look
+    mode: rate
+    command: "candles:ON"
+    floor: 8
+    min_hz: 0.5
+    max_hz: {{ candle_on_max_hz | default(6) }}
+    curve: 2.0
+    jitter_ms: {{ candle_jitter_ms | default(30) }}
+
+  - channel: 2            # ALL OFF — hold during blackout
+    mode: rate
+    command: "candles:OFF"
+    priority: true        # blackout preempts queued ON/flicker pulses
+    floor: 8
+    min_hz: 0.5
+    max_hz: {{ candle_on_max_hz | default(6) }}
+    curve: 2.0
+    jitter_ms: {{ candle_jitter_ms | default(30) }}
+
+  - channel: 3            # FLICKER — hold
+    mode: rate
+    command: "candles:FLICKER"
+    floor: 8
+    min_hz: 0.5
+    max_hz: 4
+    curve: 2.0
+    jitter_ms: {{ candle_jitter_ms | default(30) }}
+
+  - channel: 4            # STEADY — hold
+    mode: rate
+    command: "candles:STEADY"
+    floor: 8
+    min_hz: 0.5
+    max_hz: 4
+    curve: 2.0
+    jitter_ms: {{ candle_jitter_ms | default(30) }}
+
+  - channel: 5            # DIM UP (hold)
+    mode: rate
+    command: "candles:DIM_UP"
+    floor: 1
+    min_hz: 0
+    max_hz: 5
+
+  - channel: 6            # DIM DOWN (hold)
+    mode: rate
+    command: "candles:DIM_DOWN"
+    floor: 1
+    min_hz: 0
+    max_hz: 5
+
+  - channel: 10           # TIMER selector
+    mode: index
+    go_channel: 11
+    go_threshold: 128
+    table:
+      "1-127":   "candles:TIMER_4H"
+      "128-255": "candles:TIMER_8H"

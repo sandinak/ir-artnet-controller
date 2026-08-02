@@ -1,0 +1,57 @@
+Filetype: IR signals file
+Version: 1
+#
+# PLACEHOLDER candle-remote codes. REPLACE these with your real Flipper capture:
+#   Flipper -> Infrared -> Learn New Remote -> press each candle-remote button
+#   -> name it EXACTLY as below (ON, OFF, DIM_UP, ...) -> Save.
+#   Copy the resulting .ir here (keep the signal names so config.candles.yaml matches).
+# If Flipper can't decode a button, capture it as RAW -- it still transmits.
+#
+name: ON
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 01 00 00 00
+#
+name: OFF
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 02 00 00 00
+#
+name: DIM_UP
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 03 00 00 00
+#
+name: DIM_DOWN
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 04 00 00 00
+#
+name: FLICKER
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 05 00 00 00
+#
+name: STEADY
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 06 00 00 00
+#
+name: TIMER_4H
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 07 00 00 00
+#
+name: TIMER_8H
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 08 00 00 00
+#

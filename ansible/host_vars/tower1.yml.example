@@ -1,0 +1,12 @@
+---
+# Per-tower settings. Copy to host_vars/tower1.yml (matching the inventory name).
+
+artnet_universe: 0                     # must match the QLC+ output universe
+tower_short_name: "Tower-IR-1"
+tower_long_name: "Downstage-left IR tower"
+
+# Reserve a stable IP so QLC+ can unicast to this tower every show.
+# (Either set a DHCP reservation on the AP, or a static IP here.)
+tower_static_ip: "10.0.10.11/24"
+tower_gateway: "10.0.10.1"
+tower_dns: "10.0.10.1"

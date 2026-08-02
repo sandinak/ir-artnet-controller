@@ -1,0 +1,19 @@
+[Unit]
+Description=ArtNet IR Blaster (tower) — MANAGED BY ANSIBLE
+After=network-online.target
+Wants=network-online.target
+{% if transmit_backend == 'pigpio' %}
+Requires=pigpiod.service
+After=pigpiod.service
+{% endif %}
+
+[Service]
+Type=simple
+User={{ ir_artnet_user }}
+WorkingDirectory={{ ir_artnet_dir }}
+ExecStart=/usr/bin/python3 -m ir_artnet --config {{ ir_artnet_dir }}/config.yaml
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

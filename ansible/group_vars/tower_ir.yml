@@ -1,0 +1,16 @@
+---
+# Shared settings for all tower IR blasters.
+
+ir_gpio_pin: 18
+transmit_backend: ir-ctl
+allow_reboot: false            # set true (or -e allow_reboot=true) on first run
+
+# Held-look tuning (see DMX-CHART.md). Adjust after the IR hit-rate test.
+candle_on_max_hz: 6
+candle_jitter_ms: 30
+
+# --- Show WiFi (unicast Art-Net) ---
+# Uncomment and set to have Ansible join the towers to the show AP.
+# Put the PSK in an Ansible Vault, not here in the clear.
+# wifi_ssid: "DanceHysteria-Show"
+# wifi_psk: "{{ vault_show_wifi_psk }}"

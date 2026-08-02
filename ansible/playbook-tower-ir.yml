@@ -1,0 +1,10 @@
+---
+# Provision the tower IR blasters.
+#   ansible-playbook -i inventory.ini playbook-tower-ir.yml
+# First run (enables the gpio-ir-tx overlay, needs a reboot):
+#   ansible-playbook -i inventory.ini playbook-tower-ir.yml -e allow_reboot=true
+- name: Tower IR blasters
+  hosts: tower_ir
+  become: true
+  roles:
+    - ir_artnet_tower

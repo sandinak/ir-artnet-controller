@@ -1,0 +1,123 @@
+---
+# Deploy the ArtNet IR tower daemon to a Raspberry Pi.
+# Fits the sandinak/ansible-raspi-dmx fleet paradigm: no HAT EEPROM,
+# device-tree overlays and config live in config.txt / files managed here.
+
+- name: Install runtime dependencies
+  become: true
+  ansible.builtin.apt:
+    name:
+      - v4l-utils           # provides ir-ctl (the default backend)
+      - python3-yaml
+      - python3-gpiozero    # for the status-LED helper
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install pigpio (only if using the pigpio fallback backend)
+  become: true
+  ansible.builtin.apt:
+    name: [pigpio, python3-pigpio]
+    state: present
+  when: transmit_backend == 'pigpio'
+
+- name: Ensure install directory exists
+  become: true
+  ansible.builtin.file:
+    path: "{{ ir_artnet_dir }}"
+    state: directory
+    owner: "{{ ir_artnet_user }}"
+    mode: "0755"
+
+- name: Deploy ir_artnet package
+  become: true
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../ir_artnet/"
+    dest: "{{ ir_artnet_dir }}/ir_artnet/"
+    owner: "{{ ir_artnet_user }}"
+    mode: "0644"
+    directory_mode: "0755"
+  notify: restart ir-artnet
+
+- name: Deploy captured remotes (.ir files)
+  become: true
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../remotes/"
+    dest: "{{ ir_artnet_dir }}/remotes/"
+    owner: "{{ ir_artnet_user }}"
+    mode: "0644"
+    directory_mode: "0755"
+  notify: restart ir-artnet
+
+- name: Template the tower config
+  become: true
+  ansible.builtin.template:
+    src: config.candles.yaml.j2
+    dest: "{{ ir_artnet_dir }}/config.yaml"
+    owner: "{{ ir_artnet_user }}"
+    mode: "0644"
+  notify: restart ir-artnet
+
+- name: Enable the gpio-ir-tx overlay in config.txt
+  become: true
+  ansible.builtin.lineinfile:
+    path: "{{ boot_config_path }}"
+    regexp: '^dtoverlay=gpio-ir-tx'
+    line: "dtoverlay=gpio-ir-tx,gpio_pin={{ ir_gpio_pin }}"
+  when: transmit_backend == 'ir-ctl'
+  notify: reboot pi
+
+- name: Enable pigpiod (only for the pigpio backend)
+  become: true
+  ansible.builtin.systemd:
+    name: pigpiod
+    enabled: true
+    state: started
+  when: transmit_backend == 'pigpio'
+
+- name: Install the systemd unit
+  become: true
+  ansible.builtin.template:
+    src: ir-artnet.service.j2
+    dest: /etc/systemd/system/ir-artnet.service
+    mode: "0644"
+  notify:
+    - reload systemd
+    - restart ir-artnet
+
+- name: Enable and start the service
+  become: true
+  ansible.builtin.systemd:
+    name: ir-artnet
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Warn if a reboot is still required for /dev/lirc0
+  ansible.builtin.debug:
+    msg: >-
+      gpio-ir-tx overlay was (re)written but allow_reboot is false.
+      Reboot {{ inventory_hostname }} so {{ lirc_device }} appears, then the
+      service will transmit. (Set allow_reboot: true to automate this.)
+  when:
+    - transmit_backend == 'ir-ctl'
+    - not (allow_reboot | bool)
+
+# --- Optional: join the show WiFi (unicast Art-Net target) ----------------
+- name: Configure show WiFi (NetworkManager)
+  become: true
+  community.general.nmcli:
+    type: wifi
+    conn_name: "{{ wifi_conn_name }}"
+    ifname: "{{ wifi_ifname }}"
+    ssid: "{{ wifi_ssid }}"
+    wifi_sec:
+      key-mgmt: wpa-psk
+      psk: "{{ wifi_psk }}"
+    method4: "{{ 'manual' if tower_static_ip is defined else 'auto' }}"
+    ip4: "{{ tower_static_ip | default(omit) }}"
+    gw4: "{{ tower_gateway | default(omit) }}"
+    dns4: "{{ tower_dns | default(omit) }}"
+    autoconnect: true
+    state: present
+  when: wifi_ssid is defined

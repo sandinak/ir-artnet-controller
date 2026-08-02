@@ -1,0 +1,17 @@
+---
+- name: reload systemd
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: restart ir-artnet
+  become: true
+  ansible.builtin.systemd:
+    name: ir-artnet
+    state: restarted
+
+- name: reboot pi
+  become: true
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+  when: allow_reboot | bool

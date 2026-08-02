@@ -1,0 +1,75 @@
+# =====================================================================
+#  ArtNet IR Blaster -- configuration
+#  DMX channel numbers below are 1-based, exactly like your lighting desk.
+# =====================================================================
+
+artnet:
+  universe: 0            # 15-bit Art-Net port address (Net<<8 | Subnet<<4 | Universe)
+  bind_ip: "0.0.0.0"     # listen on all interfaces
+  short_name: "IR-Blaster"
+  long_name: "Stage IR Blaster (front towers)"
+
+transmitter:
+  # backend: "ir-ctl" (default, canonical/Ansible-managed) | "pigpio" (fallback)
+  backend: ir-ctl
+  # --- ir-ctl backend (gpio-ir-tx) ---
+  # Requires  dtoverlay=gpio-ir-tx,gpio_pin=18  in /boot/firmware/config.txt
+  # (managed by Ansible across the fleet).  ir-ctl sends to this LIRC device:
+  lirc_device: /dev/lirc0
+  # --- pigpio fallback (only used if backend: pigpio) ---
+  gpio_pin: 18           # BCM pin driving the MOSFET gate
+  active_low: false      # true if your driver stage inverts the signal
+  pi_host: null          # null = local pigpiod; or "10.0.0.5" for a remote pi
+  # --- common ---
+  min_gap_ms: 60         # minimum spacing between IR shots on the shared bus
+
+# ---------------------------------------------------------------------
+# IR command libraries.  Point each key at a Flipper .ir file.
+# Commands are then referenced everywhere as  <key>:<signal name>.
+# ---------------------------------------------------------------------
+ir_files:
+  projector: "remotes/projector.ir"
+  fog:       "remotes/fogger.ir"
+
+# ---------------------------------------------------------------------
+# Channel mappings.  Three modes:
+#
+#   threshold : fire once each time the channel rises across `threshold`.
+#   index     : `channel` value picks a command from `table`;
+#               `go_channel` fires it on its own rising edge.
+#   rate      : while `channel` > 0, repeat command at value-scaled rate.
+# ---------------------------------------------------------------------
+channels:
+
+  # -- simple one-button-per-channel triggers --------------------------
+  - channel: 1
+    mode: threshold
+    threshold: 128           # desk fader / bump button past 50%
+    command: "projector:Power"
+    repeats: 2               # some gear wants the frame sent twice
+
+  - channel: 2
+    mode: threshold
+    threshold: 1             # any non-zero value
+    command: "projector:Input_HDMI1"
+
+  - channel: 3
+    mode: threshold
+    threshold: 128
+    command: "fog:Blast"
+
+  # -- one selector channel + one GO channel drives many commands ------
+  - channel: 10              # selector: value chooses the command
+    mode: index
+    go_channel: 11           # rising edge here fires the selected command
+    go_threshold: 128
+    table:                   # value (or lo-hi range) -> command
+      "1-20":   "fog:Low"
+      "21-40":  "fog:Medium"
+      "41-255": "fog:High"
+
+  # -- hold-to-repeat (e.g. projector volume) --------------------------
+  - channel: 20
+    mode: rate
+    command: "projector:Volume_Up"
+    max_hz: 8                # value 255 -> 8 presses/sec; scales linearly

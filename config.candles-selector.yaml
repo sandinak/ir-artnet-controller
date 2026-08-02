@@ -1,0 +1,44 @@
+# Generated from remotes/candles.ir — selector (fixture) personality.
+# DMX ch1=Select(0=none 1..8=code)  ch2=Rate  ch3=Count(0=cont)  ch4=GO
+# Value -> code map:
+#     1 = candles:ON
+#     2 = candles:OFF
+#     3 = candles:DIM_UP
+#     4 = candles:DIM_DOWN
+#     5 = candles:FLICKER
+#     6 = candles:STEADY
+#     7 = candles:TIMER_4H
+#     8 = candles:TIMER_8H
+artnet:
+  universe: 0
+  bind_ip: 0.0.0.0
+  short_name: Tower-IR
+  long_name: Tower IR blaster
+transmitter:
+  backend: ir-ctl
+  lirc_device: /dev/lirc0
+  gpio_pin: 18
+  min_gap_ms: 60
+ir_files:
+  candles: remotes/candles.ir
+channels:
+- mode: selector
+  name: IR
+  select_channel: 1
+  rate_channel: 2
+  count_channel: 3
+  go_channel: 4
+  min_hz: 1.0
+  max_hz: 8.0
+  floor: 1
+  repeats: 1
+  table:
+    1: candles:ON
+    2: candles:OFF
+    3: candles:DIM_UP
+    4: candles:DIM_DOWN
+    5: candles:FLICKER
+    6: candles:STEADY
+    7: candles:TIMER_4H
+    8: candles:TIMER_8H
+
