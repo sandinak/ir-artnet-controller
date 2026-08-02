@@ -1,12 +1,27 @@
-# Ansible — tower IR blaster deploy
+# Ansible — tower IR blaster deploy (standalone)
+
+> **For the show fleet, use `sandinak/ansible-raspi-dmx` instead.** This repo is
+> vendored there as the submodule `external/ir-artnet-controller`, and the
+> `ir_artnet_tower` role deploys it alongside the steps, sceptres and routers:
+>
+> ```bash
+> ansible-playbook playbooks/build/ir_towers.yml -e ir_artnet_allow_reboot=true
+> ```
+>
+> That path is the canonical one. It carries the fleet's inventory (universes,
+> addressing, WiFi), validates the whole cue map before touching a host, and
+> installs into a venv — required on Raspberry Pi OS Bookworm/Trixie, which are
+> PEP 668 externally-managed.
+>
+> What follows is the **standalone** deploy, kept for developing against a
+> single Pi without the fleet inventory. It installs to the system Python and
+> hardcodes the candle cue map in its template, so the two will drift; treat the
+> fleet role as the source of truth for anything show-facing.
 
 Provisions the tower Pis end-to-end: installs `ir-ctl`, deploys the `ir_artnet`
 service + captured `.ir` codes, enables the `gpio-ir-tx` overlay in `config.txt`,
 templates the per-tower config, installs/enables the systemd unit, and (optionally)
 joins the show WiFi with a reserved IP for unicast Art-Net.
-
-Designed to drop into the existing **`sandinak/ansible-raspi-dmx`** repo — it follows
-the same conventions (config-in-`config.txt`, no HAT EEPROM, per-host vars).
 
 ## Layout
 

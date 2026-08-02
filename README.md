@@ -41,6 +41,14 @@ See **hardware.md** for the schematic, parts list, and recommended HAT.
 
 ## Install (on the Pi)
 
+> **Fleet deploy:** this repo is vendored into `sandinak/ansible-raspi-dmx` as
+> `external/ir-artnet-controller`, and the `ir_artnet_tower` role there does all
+> of the below (in a venv, with the cue map driven from inventory). Use
+> `ansible-playbook playbooks/build/ir_towers.yml` for show machines. The manual
+> steps here are for a bench Pi.
+
+Tested on Raspberry Pi OS Bookworm and Trixie.
+
 ```bash
 sudo apt update
 sudo apt install -y v4l-utils python3-yaml     # v4l-utils provides ir-ctl
