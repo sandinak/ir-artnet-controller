@@ -14,30 +14,41 @@
 > PEP 668 externally-managed.
 >
 > What follows is the **standalone** deploy, kept for developing against a
-> single Pi without the fleet inventory. It installs to the system Python and
-> hardcodes the candle cue map in its template, so the two will drift; treat the
-> fleet role as the source of truth for anything show-facing.
+> single Pi without the fleet inventory. Like the fleet role it installs into a
+> venv, but it hardcodes the candle cue map in its template rather than driving it
+> from inventory, so the two will drift there; treat the fleet role as the source
+> of truth for anything show-facing.
 
 Provisions the tower Pis end-to-end. In order, the role:
 
-1. **Installs packages** — `v4l-utils` (provides `ir-ctl`), `python3-yaml`,
-   `python3-gpiozero`; plus `pigpio`/`python3-pigpio` only when
+1. **Installs system packages** — `v4l-utils` (provides `ir-ctl`), `python3-venv`,
+   `python3-pip`, `python3-gpiozero`; plus `pigpio`/`python3-pigpio` only when
    `transmit_backend: pigpio`.
-2. **Deploys the code** — `../ir_artnet/*.py` → `{{ ir_artnet_dir }}/ir_artnet/`.
+2. **Builds the virtualenv** — ships `../requirements.txt` to the tower, then builds
+   `{{ ir_artnet_venv }}` (default `/opt/ir-artnet/venv`) from it. Raspberry Pi OS Bookworm and
+   Trixie are PEP 668 externally-managed, so pip cannot write to the system
+   interpreter at all. The venv is created with `--system-site-packages` so the
+   apt-provided C-extension packages (`python3-gpiozero`, `python3-pigpio`) stay
+   visible, while anything pip installs shadows the system copy. The systemd unit
+   runs `{{ ir_artnet_python }}` directly — no activation involved.
+3. **Deploys the code** — `../ir_artnet/*.py` → `{{ ir_artnet_dir }}/ir_artnet/`.
    Sources only: a bare directory copy would also push the dev machine's
    `__pycache__/`, whose `.pyc` files are built for the wrong Python ABI. Any stale
    cache already on the tower is removed.
-3. **Deploys the codes** — `../remotes/*.ir` → `{{ ir_artnet_dir }}/remotes/`.
-4. **Templates the config** — `config.candles.yaml.j2` → `config.yaml`, with the
+4. **Deploys the codes** — `../remotes/*.ir` → `{{ ir_artnet_dir }}/remotes/`.
+5. **Templates the config** — `config.candles.yaml.j2` → `config.yaml`, with the
    universe, identity and held-look tuning filled in from inventory.
-5. **Enables IR output** — writes `dtoverlay=gpio-ir-tx,gpio_pin={{ ir_gpio_pin }}`
+6. **Enables IR output** — writes `dtoverlay=gpio-ir-tx,gpio_pin={{ ir_gpio_pin }}`
    into `config.txt`. **This needs a reboot** to create `/dev/lirc0`.
-6. **Grants device access** — adds `ir_artnet_user` to the `video` group and installs
+7. **Grants device access** — adds `ir_artnet_user` to the `video` group and installs
    `/etc/udev/rules.d/99-ir-artnet-lirc.rules` pinning LIRC devices to
    `root:video 0660`. The service runs unprivileged, so without this `ir-ctl` cannot
    open the device — the daemon starts fine and then fails on every shot.
-7. **Installs and starts** the `ir-artnet` systemd unit.
-8. **Optionally joins the show WiFi** (`community.general.nmcli`) with a reserved IP
+8. **Validates the deploy** — runs `--list` through the venv against the templated
+   config. A cue map referencing a signal that isn't in the `.ir` files fails the
+   play here, rather than failing silently at showtime.
+9. **Installs and starts** the `ir-artnet` systemd unit.
+10. **Optionally joins the show WiFi** (`community.general.nmcli`) with a reserved IP
    for unicast Art-Net — only when `wifi_ssid` is defined.
 
 Everything is idempotent; re-running pushes new code/config and restarts the service
@@ -84,6 +95,8 @@ ansible-playbook -i inventory.ini playbook-tower-ir.yml
 | `transmit_backend` | group_vars | `ir-ctl` (default) or `pigpio` |
 | `candle_on_max_hz`, `candle_jitter_ms` | group_vars | held-look tuning (see `../DMX-CHART.md`) |
 | `allow_reboot` | group_vars / `-e` | let Ansible reboot after enabling the overlay |
+| `ir_artnet_venv` | defaults | virtualenv path (default `{{ ir_artnet_dir }}/venv`) |
+| `ir_artnet_python` | defaults | interpreter the systemd unit runs |
 
 ## Updating the candle codes
 
@@ -109,5 +122,10 @@ repo and re-run the playbook — it redeploys the `.ir` file and restarts the se
   the daemon can load:
 
   ```bash
-  python3 -m ir_artnet --config /opt/ir-artnet/config.yaml --list     # on the tower
+  # on the tower -- the role runs exactly this before starting the service
+  /opt/ir-artnet/venv/bin/python -m ir_artnet --config /opt/ir-artnet/config.yaml --list
   ```
+
+- **Upgrading dependencies** is a repo edit: change `../requirements.txt` and re-run.
+  The `pip` task reinstalls into the existing venv and notifies a service restart.
+  To rebuild the venv from scratch, `rm -rf /opt/ir-artnet/venv` on the tower first.

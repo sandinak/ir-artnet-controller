@@ -3,6 +3,12 @@
 ir_artnet_dir: /opt/ir-artnet
 ir_artnet_user: pi
 
+# The daemon runs from its own virtualenv. Raspberry Pi OS Bookworm/Trixie are
+# PEP 668 externally-managed, so this is not optional -- and it pins the daemon's
+# dependencies against whatever apt does to the system interpreter later.
+ir_artnet_venv: "{{ ir_artnet_dir }}/venv"
+ir_artnet_python: "{{ ir_artnet_venv }}/bin/python"
+
 # IR output
 ir_gpio_pin: 18                 # gpio-ir-tx pin -> MOSFET gate
 lirc_device: /dev/lirc0

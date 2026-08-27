@@ -3,13 +3,15 @@
 # Fits the sandinak/ansible-raspi-dmx fleet paradigm: no HAT EEPROM,
 # device-tree overlays and config live in config.txt / files managed here.
 
-- name: Install runtime dependencies
+- name: Install system dependencies
   become: true
   ansible.builtin.apt:
     name:
       - v4l-utils           # provides ir-ctl (the default backend)
-      - python3-yaml
-      - python3-gpiozero    # for the status-LED helper
+      - python3-venv        # the daemon runs from its own venv
+      - python3-pip
+      - python3-gpiozero    # status-LED helper; apt-only (needs a C GPIO backend)
+      - acl                 # lets Ansible become an unprivileged user for the venv tasks
     state: present
     update_cache: true
     cache_valid_time: 3600
@@ -28,6 +30,28 @@
     state: directory
     owner: "{{ ir_artnet_user }}"
     mode: "0755"
+
+# Raspberry Pi OS Bookworm/Trixie are PEP 668 externally-managed: pip cannot write
+# to the system interpreter at all. The venv is built with --system-site-packages
+# so the apt-provided C-extension packages (python3-gpiozero, python3-pigpio) stay
+# visible, while anything pip installs here shadows the system copy.
+# pip's `requirements` path is resolved on the TARGET, so ship the file first.
+- name: Deploy requirements.txt
+  become: true
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../requirements.txt"
+    dest: "{{ ir_artnet_dir }}/requirements.txt"
+    owner: "{{ ir_artnet_user }}"
+    mode: "0644"
+
+- name: Create the venv and install Python dependencies into it
+  become: true
+  become_user: "{{ ir_artnet_user }}"
+  ansible.builtin.pip:
+    requirements: "{{ ir_artnet_dir }}/requirements.txt"
+    virtualenv: "{{ ir_artnet_venv }}"
+    virtualenv_command: "python3 -m venv --system-site-packages"
+  notify: restart ir-artnet
 
 - name: Ensure the package directory exists
   become: true
@@ -124,6 +148,19 @@
   notify:
     - reload systemd
     - restart ir-artnet
+
+- name: Verify the venv can load the deployed config
+  become: true
+  become_user: "{{ ir_artnet_user }}"
+  ansible.builtin.command:
+    cmd: "{{ ir_artnet_python }} -m ir_artnet --config {{ ir_artnet_dir }}/config.yaml --list"
+    chdir: "{{ ir_artnet_dir }}"
+  register: ir_artnet_check
+  changed_when: false
+
+- name: Show the commands this tower can fire
+  ansible.builtin.debug:
+    var: ir_artnet_check.stdout_lines
 
 - name: Enable and start the service
   become: true

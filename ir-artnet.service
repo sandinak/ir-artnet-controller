@@ -9,7 +9,7 @@ Wants=network-online.target
 Type=simple
 User=pi
 WorkingDirectory=/opt/ir-artnet
-ExecStart=/usr/bin/python3 -m ir_artnet --config /opt/ir-artnet/config.yaml
+ExecStart=/opt/ir-artnet/venv/bin/python -m ir_artnet --config /opt/ir-artnet/config.yaml
 Restart=on-failure
 RestartSec=3
 # Art-Net is UDP/6454; no special caps needed for a normal (>1024) socket.

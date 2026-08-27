@@ -209,15 +209,26 @@ Tested on Raspberry Pi OS Bookworm and Trixie.
 
 ```bash
 sudo apt update
-sudo apt install -y v4l-utils python3-yaml     # v4l-utils provides ir-ctl
+sudo apt install -y v4l-utils python3-venv     # v4l-utils provides ir-ctl
 
 # enable the IR TX device (Ansible manages this in the fleet):
 echo 'dtoverlay=gpio-ir-tx,gpio_pin=18' | sudo tee -a /boot/firmware/config.txt
 sudo reboot                                    # creates /dev/lirc0
 
-sudo mkdir -p /opt/ir-artnet
-sudo cp -r ir_artnet config.yaml remotes /opt/ir-artnet/
+sudo mkdir -p /opt/ir-artnet && sudo chown "$USER" /opt/ir-artnet
+cp -r ir_artnet config.yaml remotes requirements.txt /opt/ir-artnet/
+
+# The daemon runs from its own venv -- Raspberry Pi OS Bookworm/Trixie are PEP 668
+# externally-managed, so pip cannot touch the system interpreter. --system-site-packages
+# keeps the apt-provided C-extension packages (gpiozero, pigpio) visible.
+python3 -m venv --system-site-packages /opt/ir-artnet/venv
+/opt/ir-artnet/venv/bin/pip install -r /opt/ir-artnet/requirements.txt
 ```
+
+Everything from here on runs as `/opt/ir-artnet/venv/bin/python` — the `python3 -m
+ir_artnet` invocations below assume you've activated the venv (`source
+/opt/ir-artnet/venv/bin/activate`) or substituted the full path. The systemd unit uses
+the absolute path, so it needs no activation.
 
 > **Fallback backend:** to use pigpio instead of `ir-ctl`, set `transmitter.backend: pigpio`
 > in `config.yaml`, `sudo apt install pigpio python3-pigpio`, and
@@ -240,7 +251,8 @@ flowchart TB
     C["host_vars/tower1.yml<br/><small>universe, static IP</small>"] --> P
     P["<b>playbook-tower-ir.yml</b><br/>role: ir_artnet_tower"]
 
-    P --> D1["apt: v4l-utils, python3-yaml<br/><small>+ pigpio if that backend</small>"]
+    P --> D1["apt: v4l-utils, python3-venv<br/><small>+ pigpio if that backend</small>"]
+    P --> D1b["venv + pip install<br/><small>/opt/ir-artnet/venv</small>"]
     P --> D2["copy ir_artnet/*.py + remotes/*.ir<br/>→ /opt/ir-artnet"]
     P --> D3["template config.yaml<br/><small>from the candle cue map</small>"]
     P --> D4["config.txt: dtoverlay=gpio-ir-tx<br/><small>+ video group, udev rule</small>"]
@@ -272,9 +284,19 @@ ansible-playbook -i ansible/inventory.ini ansible/playbook-tower-ir.yml
 | `candle_on_max_hz`, `candle_jitter_ms` | group_vars | held-look tuning — see [DMX-CHART.md](DMX-CHART.md) |
 | `allow_reboot` | group_vars / `-e` | let Ansible reboot after enabling the overlay |
 
+The role installs into a **virtualenv** at `{{ ir_artnet_venv }}` (default
+`/opt/ir-artnet/venv`), built with `--system-site-packages`, and points the systemd unit
+at its interpreter. Raspberry Pi OS Bookworm and Trixie are PEP 668 externally-managed,
+so pip cannot write to the system interpreter at all — and the venv pins the daemon's
+dependencies against whatever apt does to system Python later.
+
 The service runs unprivileged, so the role also adds `ir_artnet_user` to the `video`
 group and installs a udev rule pinning `/dev/lirc0` to `root:video 0660` — without that,
-`ir-ctl` can't open the device. Full details in [ansible/README.md](ansible/README.md).
+`ir-ctl` can't open the device. Before starting the service, the role runs `--list`
+through the venv against the templated config, so a broken cue map fails the play
+instead of failing silently at showtime.
+
+Full details in [ansible/README.md](ansible/README.md).
 
 ---
 

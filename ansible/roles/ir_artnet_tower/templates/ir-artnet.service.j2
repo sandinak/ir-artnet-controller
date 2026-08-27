@@ -11,7 +11,7 @@ After=pigpiod.service
 Type=simple
 User={{ ir_artnet_user }}
 WorkingDirectory={{ ir_artnet_dir }}
-ExecStart=/usr/bin/python3 -m ir_artnet --config {{ ir_artnet_dir }}/config.yaml
+ExecStart={{ ir_artnet_python }} -m ir_artnet --config {{ ir_artnet_dir }}/config.yaml
 Restart=on-failure
 RestartSec=3
 
