@@ -15,3 +15,8 @@
   ansible.builtin.reboot:
     reboot_timeout: 300
   when: allow_reboot | bool
+
+- name: reload udev
+  become: true
+  ansible.builtin.command: udevadm control --reload-rules
+  changed_when: true

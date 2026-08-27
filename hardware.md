@@ -83,7 +83,7 @@ one driver stage + one blaster head of ~6–8 LEDs.
 | Q1 | Logic-level N-MOSFET | **AO3400A** (SOT-23) — fleet-standard part | 1–2 | $0.15 | Same FET as the step HAT's IR channels. ~1–1.5 A practical per SOT-23; split a big tower array across **both** IR channels (J_IR0+J_IR1), or sub **IRLB8721** (TO-220) if one channel must carry >2 A |
 | R1 | Resistor | 220 Ω, ¼ W | 1 | $0.10 | Gate series (limits GPIO inrush) |
 | R2 | Resistor | 10 kΩ, ¼ W | 1 | $0.10 | Gate pulldown (LED off during boot/reset) |
-| — | Screw terminal | 5 mm, 2- or 3-pos | 1–2 | $1 | LED-array feed + 12 V in |
+| — | Screw terminal | 5 mm pitch, **4-position** | 1 | $1 | Four wires leave the HAT: `12V+`, `12V–`, `LED+`, `LED–` (matches the solder table below). Two 2-pos blocks side by side also work |
 | — | Flyback/decoupling | 100 µF electrolytic + 0.1 µF across 12 V | 1 ea | $0.50 | Stiffens the rail against 38 kHz switching |
 
 ### IR LED blaster head (per tower)
@@ -107,6 +107,62 @@ series (see math below). 850 nm is what almost all consumer/AV IR receivers expe
 | Pi → gate | any hookup wire | GPIO18 → R1 → Q1 gate |
 | LED feed to tower | 18 AWG 2-conductor | carries the array current from Q1 drain / 12 V |
 | Ethernet | Cat5e | ArtNet from the lighting network to the Pi |
+
+### Pi host kit (easy to forget — one per tower)
+
+| Item | Spec | Qty | ~Price | Notes |
+|------|------|-----|--------|-------|
+| microSD card | 16–32 GB, **A1/A2 rated** | 1 | $6–10 | Raspberry Pi OS Lite (Bookworm or Trixie). A1/A2 endurance matters for a box that gets power-cut at strike |
+| Pi power supply | official 5 V, 3 A USB-C (Pi 4/5) or 2.5 A micro-USB (3B+) | 1 | $8–10 | **Separate from the 12 V LED supply.** Undervolt warnings = dropped Art-Net frames |
+| Case / enclosure | vented, with header cutout for the HAT | 1 | $8–15 | Must clear the HAT and the screw terminal |
+| HAT standoffs | M2.5 × 11 mm, nylon or brass | 4 | $2 | Stops the HAT flexing on the header under road vibration |
+| 40-pin header | stacking, 2×20, **only if** the HAT doesn't ship with one | 0–1 | $2 | Adafruit #2310 includes one |
+
+### Connectors & protection
+
+| Item | Spec | Qty | ~Price | Notes |
+|------|------|-----|--------|-------|
+| JST-XH 4-pin | header + crimp housing (**J_IR0** / **J_IR1**) | 1–2 | $0.50 | **Fleet standard** — matches the custom HAT and the step units. Use these instead of the screw terminal if you are building toward the production board |
+| JST-XH 4-pin | header + crimp housing (**J_STAT**) | 0–1 | $0.50 | Optional status pod (see [step-pi-status-serial.md](step-pi-status-serial.md)) |
+| Inline fuse + holder | 3 A slow-blow, 5×20 mm or blade | 1 | $2 | On the **12 V+** feed, before the HAT. A shorted emitter head otherwise draws whatever the PSU can deliver |
+| Ferrules / heatshrink | 18 AWG ferrules, assorted heatshrink | — | $3 | Stranded wire into screw terminals wants ferrules; every solder joint at the head wants shrink |
+| Strain relief | cable gland or P-clip at the head | 1 | $1 | The head cable is the thing that will get snagged |
+
+### Mechanical (emitter head)
+
+| Item | Spec | Qty | ~Price | Notes |
+|------|------|-----|--------|-------|
+| Head substrate | small aluminium bar / PCB blank, ~50 × 25 mm | 1 | $2–5 | Doubles as the heatsink for the LED cluster |
+| Mount | ball-head or Manfredi-style clamp to the tower truss | 1 | $8–15 | **Aim is everything** — you want to re-aim it after the hit-rate test without rebuilding |
+| Thermal pad / epoxy | thermally conductive | — | $3 | Bonds the SFH 4715AS pads to the bar |
+
+### Cost roll-up (one tower, excluding the Pi)
+
+| Group | ~Cost |
+|-------|-------|
+| Driver stage (HAT, Q1, R1/R2, terminal, caps) | $8–13 |
+| Emitter head (8 × SFH 4715AS, resistors or CC driver, heatsink) | $20–30 |
+| 12 V PSU + fuse + cable | $14–18 |
+| Pi host kit (SD, 5 V PSU, case, standoffs) | $24–37 |
+| Mount + mechanical | $13–23 |
+| **Total per tower, without the Pi** | **≈ $80–120** |
+| Raspberry Pi | $15–55 |
+
+Two towers = two identical kits. Build both; the redundancy is the whole point of
+one-blaster-per-tower.
+
+### Bench-build checklist
+
+Everything you need on the table before you start soldering:
+
+- [ ] Pi flashed with Raspberry Pi OS Lite, SSH enabled, on the show network
+- [ ] Proto HAT, Q1 (AO3400A or IRLB8721), R1 220 Ω, R2 10 kΩ, 100 µF + 0.1 µF
+- [ ] 4-position screw terminal (or JST-XH headers if building to the fleet standard)
+- [ ] 6–8 × SFH 4715AS on the heatsink bar, 3–4 × 8.2 Ω 5 W (or one LDD-700H)
+- [ ] 12 V PSU ≥ 3 A, 3 A inline fuse, 18 AWG 2-conductor to the head
+- [ ] Soldering iron, multimeter, **and a phone camera** (to see the IR firing)
+- [ ] The candle remote captured on the Flipper as `remotes/candles.ir`
+
 
 ## Pi-HAT solder layout
 
@@ -174,8 +230,14 @@ series string from it and drop the per-string resistor.
 ## Bench test before hanging it
 
 ```bash
-# with pigpiod running on the Pi:
-python3 -m ir_artnet --config config.yaml --send projector:Power
+# Default backend (ir-ctl): needs the gpio-ir-tx overlay enabled and a reboot,
+# so that /dev/lirc0 exists.  Confirm first:
+ls -l /dev/lirc0
+
+python3 -m ir_artnet --config config.yaml --send candles:ON
+
+# If you switched transmitter.backend to pigpio, start pigpiod instead:
+#   sudo systemctl enable --now pigpiod
 ```
 
 Point a phone camera at the LEDs — most phone cameras see 850 nm as a faint purple/white
@@ -186,6 +248,8 @@ flicker, so you can confirm the array is firing before you ever touch the lighti
 Coverage across a stage is a **power/optics** problem, not a protocol one — a USB blaster
 or a single-LED HAT can't throw far enough. Driving a MOSFET from one GPIO lets you hang
 as many high-power emitters as your 12 V supply can feed and aim them from the towers, so
-one or two heads replace IR hardware on all 12 steps. Using `pigpio` for the carrier (not
-the kernel `gpio-ir-tx` driver) means the software can replay Flipper **raw** captures at
-exact timing and any carrier frequency, so any remote you capture will work.
+one or two heads replace IR hardware on all 12 steps. The carrier itself comes from the
+kernel's **`gpio-ir-tx`** driver via `ir-ctl` — the fleet-standard path, managed by
+Ansible like every other overlay. Flipper **raw** captures replay verbatim through it,
+and the **pigpio** backend stays available as a fallback for the rare capture that needs
+a non-38 kHz carrier or sub-microsecond envelope control (`transmitter.backend: pigpio`).

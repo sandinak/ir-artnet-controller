@@ -29,15 +29,32 @@
     owner: "{{ ir_artnet_user }}"
     mode: "0755"
 
-- name: Deploy ir_artnet package
+- name: Ensure the package directory exists
+  become: true
+  ansible.builtin.file:
+    path: "{{ ir_artnet_dir }}/ir_artnet"
+    state: directory
+    owner: "{{ ir_artnet_user }}"
+    mode: "0755"
+
+# Copy the sources only. A bare directory copy would also push the dev
+# machine's __pycache__/, whose .pyc files are built for the wrong Python ABI.
+- name: Deploy ir_artnet package sources
   become: true
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../ir_artnet/"
+    src: "{{ item }}"
     dest: "{{ ir_artnet_dir }}/ir_artnet/"
     owner: "{{ ir_artnet_user }}"
     mode: "0644"
-    directory_mode: "0755"
+  with_fileglob:
+    - "{{ playbook_dir }}/../ir_artnet/*.py"
   notify: restart ir-artnet
+
+- name: Remove any stale bytecode cache on the tower
+  become: true
+  ansible.builtin.file:
+    path: "{{ ir_artnet_dir }}/ir_artnet/__pycache__"
+    state: absent
 
 - name: Deploy captured remotes (.ir files)
   become: true
@@ -65,7 +82,30 @@
     regexp: '^dtoverlay=gpio-ir-tx'
     line: "dtoverlay=gpio-ir-tx,gpio_pin={{ ir_gpio_pin }}"
   when: transmit_backend == 'ir-ctl'
+  register: ir_overlay
   notify: reboot pi
+
+# The service runs unprivileged, so it must be able to open the LIRC chardev.
+# Raspberry Pi OS ships /dev/lirc0 as root:video 0660; this makes that explicit
+# so a non-default ir_artnet_user still works.
+- name: Grant the service user access to the LIRC device
+  become: true
+  ansible.builtin.user:
+    name: "{{ ir_artnet_user }}"
+    groups: video
+    append: true
+  when: transmit_backend == 'ir-ctl'
+
+- name: Install a udev rule pinning LIRC device ownership
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/udev/rules.d/99-ir-artnet-lirc.rules
+    content: |
+      # MANAGED BY ANSIBLE (role: ir_artnet_tower)
+      SUBSYSTEM=="lirc", GROUP="video", MODE="0660"
+    mode: "0644"
+  when: transmit_backend == 'ir-ctl'
+  notify: reload udev
 
 - name: Enable pigpiod (only for the pigpio backend)
   become: true
@@ -101,6 +141,7 @@
       service will transmit. (Set allow_reboot: true to automate this.)
   when:
     - transmit_backend == 'ir-ctl'
+    - ir_overlay.changed | default(false)
     - not (allow_reboot | bool)
 
 # --- Optional: join the show WiFi (unicast Art-Net target) ----------------

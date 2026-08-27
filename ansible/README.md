@@ -18,10 +18,30 @@
 > hardcodes the candle cue map in its template, so the two will drift; treat the
 > fleet role as the source of truth for anything show-facing.
 
-Provisions the tower Pis end-to-end: installs `ir-ctl`, deploys the `ir_artnet`
-service + captured `.ir` codes, enables the `gpio-ir-tx` overlay in `config.txt`,
-templates the per-tower config, installs/enables the systemd unit, and (optionally)
-joins the show WiFi with a reserved IP for unicast Art-Net.
+Provisions the tower Pis end-to-end. In order, the role:
+
+1. **Installs packages** — `v4l-utils` (provides `ir-ctl`), `python3-yaml`,
+   `python3-gpiozero`; plus `pigpio`/`python3-pigpio` only when
+   `transmit_backend: pigpio`.
+2. **Deploys the code** — `../ir_artnet/*.py` → `{{ ir_artnet_dir }}/ir_artnet/`.
+   Sources only: a bare directory copy would also push the dev machine's
+   `__pycache__/`, whose `.pyc` files are built for the wrong Python ABI. Any stale
+   cache already on the tower is removed.
+3. **Deploys the codes** — `../remotes/*.ir` → `{{ ir_artnet_dir }}/remotes/`.
+4. **Templates the config** — `config.candles.yaml.j2` → `config.yaml`, with the
+   universe, identity and held-look tuning filled in from inventory.
+5. **Enables IR output** — writes `dtoverlay=gpio-ir-tx,gpio_pin={{ ir_gpio_pin }}`
+   into `config.txt`. **This needs a reboot** to create `/dev/lirc0`.
+6. **Grants device access** — adds `ir_artnet_user` to the `video` group and installs
+   `/etc/udev/rules.d/99-ir-artnet-lirc.rules` pinning LIRC devices to
+   `root:video 0660`. The service runs unprivileged, so without this `ir-ctl` cannot
+   open the device — the daemon starts fine and then fails on every shot.
+7. **Installs and starts** the `ir-artnet` systemd unit.
+8. **Optionally joins the show WiFi** (`community.general.nmcli`) with a reserved IP
+   for unicast Art-Net — only when `wifi_ssid` is defined.
+
+Everything is idempotent; re-running pushes new code/config and restarts the service
+without touching the overlay or rebooting.
 
 ## Layout
 
@@ -79,3 +99,15 @@ repo and re-run the playbook — it redeploys the `.ir` file and restarts the se
   `/boot/config.txt` for older images.
 - Bluetooth is **not** disabled here — towers use `gpio-ir-tx`, not the PL011 UART
   (that constraint is only for the Pixelblaze step units).
+- **First run must reboot.** Until `/dev/lirc0` exists, the service starts and logs
+  `ir-ctl backend unavailable` on every shot. Either pass `-e allow_reboot=true` or
+  reboot by hand; the role prints a reminder when it wrote the overlay and could not
+  reboot.
+- **`ir_artnet_user` must already exist** (`pi` by default). The role sets file
+  ownership and group membership but does not create the account.
+- **Verify the deployed cue map** without a Pi — the template renders to plain YAML that
+  the daemon can load:
+
+  ```bash
+  python3 -m ir_artnet --config /opt/ir-artnet/config.yaml --list     # on the tower
+  ```

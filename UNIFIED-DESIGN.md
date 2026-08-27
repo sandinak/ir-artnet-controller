@@ -122,6 +122,8 @@ fleet's IR method:
 | `step-pi-status-serial.md` | step-unit status pod + serial (corrected) |
 | `steppi-layout.svg` | step HAT connector map + universal pod |
 | `hat-layout.svg` | tower driver Perma-Proto solder layout |
+| `breadboard-ir.svg` | breadboard validation wiring (step 1 of the sequence) |
+| `ansible/` | standalone deploy role (`ir_artnet_tower`) + playbook for a single Pi |
 | `config.yaml` | ArtNet universe, transmit backend, channel→command map |
 | `ir_artnet/` | the service (parse / protocols / transmit backends / ArtNet / controller) |
 | `examples/status_leds.py` | status-LED demo (gpiozero) |
