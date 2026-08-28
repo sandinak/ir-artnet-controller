@@ -1,0 +1,12 @@
+---
+# The role's variables are the documented inventory interface: artnet_universe,
+# wifi_ssid, allow_reboot, transmit_backend and friends are set in group_vars /
+# host_vars and are named to match the sandinak/ansible-raspi-dmx fleet, where the
+# same role ships show-facing. Renaming them to an ir_artnet_tower_ prefix would
+# break every existing inventory for a naming convention, so this rule is off by
+# choice rather than by neglect.
+skip_list:
+  - var-naming[no-role-prefix]
+
+exclude_paths:
+  - .github/

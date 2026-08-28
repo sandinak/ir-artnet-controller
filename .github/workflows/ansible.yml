@@ -1,0 +1,37 @@
+name: ansible
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: lint + deploy checks
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tooling
+        run: pip install ansible-core ansible-lint jinja2 pyyaml
+
+      - name: Install collections
+        run: ansible-galaxy collection install -r ansible/requirements.yml
+
+      - name: ansible-lint
+        run: ansible-lint ansible/
+
+      - name: Playbook syntax check
+        run: |
+          ansible-playbook --syntax-check \
+            -i ansible/inventory.ini.example \
+            ansible/playbook-tower-ir.yml
+
+      # The role templates the cue map that the daemon loads on a tower. Render it
+      # here and hand it to the real Controller, so a bad command reference fails
+      # the build instead of failing at a load-in.
+      - name: Rendered config loads in the daemon
+        run: python ansible/check-template.py

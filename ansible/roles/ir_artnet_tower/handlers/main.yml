@@ -1,22 +1,22 @@
 ---
-- name: reload systemd
+- name: Reload systemd
   become: true
   ansible.builtin.systemd:
     daemon_reload: true
 
-- name: restart ir-artnet
+- name: Restart ir-artnet
   become: true
   ansible.builtin.systemd:
     name: ir-artnet
     state: restarted
 
-- name: reboot pi
+- name: Reboot pi
   become: true
   ansible.builtin.reboot:
     reboot_timeout: 300
   when: allow_reboot | bool
 
-- name: reload udev
+- name: Reload udev
   become: true
   ansible.builtin.command: udevadm control --reload-rules
   changed_when: true

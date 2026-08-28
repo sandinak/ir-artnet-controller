@@ -51,7 +51,7 @@
     requirements: "{{ ir_artnet_dir }}/requirements.txt"
     virtualenv: "{{ ir_artnet_venv }}"
     virtualenv_command: "python3 -m venv --system-site-packages"
-  notify: restart ir-artnet
+  notify: Restart ir-artnet
 
 - name: Ensure the package directory exists
   become: true
@@ -72,7 +72,7 @@
     mode: "0644"
   with_fileglob:
     - "{{ playbook_dir }}/../ir_artnet/*.py"
-  notify: restart ir-artnet
+  notify: Restart ir-artnet
 
 - name: Remove any stale bytecode cache on the tower
   become: true
@@ -88,7 +88,7 @@
     owner: "{{ ir_artnet_user }}"
     mode: "0644"
     directory_mode: "0755"
-  notify: restart ir-artnet
+  notify: Restart ir-artnet
 
 - name: Template the tower config
   become: true
@@ -97,7 +97,7 @@
     dest: "{{ ir_artnet_dir }}/config.yaml"
     owner: "{{ ir_artnet_user }}"
     mode: "0644"
-  notify: restart ir-artnet
+  notify: Restart ir-artnet
 
 - name: Enable the gpio-ir-tx overlay in config.txt
   become: true
@@ -107,7 +107,7 @@
     line: "dtoverlay=gpio-ir-tx,gpio_pin={{ ir_gpio_pin }}"
   when: transmit_backend == 'ir-ctl'
   register: ir_overlay
-  notify: reboot pi
+  notify: Reboot pi
 
 # The service runs unprivileged, so it must be able to open the LIRC chardev.
 # Raspberry Pi OS ships /dev/lirc0 as root:video 0660; this makes that explicit
@@ -129,7 +129,7 @@
       SUBSYSTEM=="lirc", GROUP="video", MODE="0660"
     mode: "0644"
   when: transmit_backend == 'ir-ctl'
-  notify: reload udev
+  notify: Reload udev
 
 - name: Enable pigpiod (only for the pigpio backend)
   become: true
@@ -146,8 +146,8 @@
     dest: /etc/systemd/system/ir-artnet.service
     mode: "0644"
   notify:
-    - reload systemd
-    - restart ir-artnet
+    - Reload systemd
+    - Restart ir-artnet
 
 - name: Verify the venv can load the deployed config
   become: true

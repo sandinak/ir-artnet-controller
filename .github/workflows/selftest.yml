@@ -8,14 +8,24 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The README advertises 3.9+; test the range rather than assert it.
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    name: selftest (py${{ matrix.python-version }})
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: Install deps
-        run: pip install pyyaml
+          python-version: ${{ matrix.python-version }}
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
       - name: Compile
-        run: python -m py_compile ir_artnet/*.py selftest.py
+        run: python -m py_compile ir_artnet/*.py selftest.py examples/*.py
       - name: Run offline self-test
         run: python selftest.py
+      - name: Bench utilities work end to end
+        run: |
+          python -m ir_artnet --config config.candles-selector.yaml --list
+          python -m ir_artnet --config config.yaml --dump projector:Power > /dev/null
