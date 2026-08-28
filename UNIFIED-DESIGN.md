@@ -139,9 +139,15 @@ fleet's IR method:
   `0x00`, six buttons — `On` `0x45`, `Off` `0x47`, `Candle` `0x16`, `Light` `0x0D`,
   `Dim` `0x0C`, `Brighten` `0x5E`. All six re-encode to the captured bytes with valid
   NEC checksums.
-- **The codes drive the real candles**, tested extensively at better than bench range.
-  Capture → parse → encode → transmit is proven end to end; this is no longer a
-  theoretical chain.
+- **The whole signal chain works, driven from the desk.** Testing was done with
+  **QLC+ sending Art-Net** into the daemon, not with `--send`, so everything between
+  the desk and the candles is exercised against real hardware: ArtDMX receive and
+  universe filtering, the channel map, the trigger modes, the transmit queue, and
+  `ir-ctl` output. Capture → parse → encode → map → transmit → candle response is
+  proven end to end; none of it is theoretical any more.
+- Which means the **held-look (`rate`) model is validated in practice**, not just in
+  `selftest.py` against a fake transmitter — the part of the design most likely to have
+  been wrong on contact with real gear.
 - **`Candle` = flicker mode, `Light` = steady.** Verified on the units, so the
   operator-facing descriptions in `DMX-CHART.md` are fact rather than inference.
 - This remote has **no timer buttons**; the earlier `TIMER_4H`/`TIMER_8H` cues were
@@ -150,7 +156,8 @@ fleet's IR method:
 **Not yet proven — the gate is still open:**
 
 - The test was *not* at tower height with the real step geometry, so the **IR hit-rate
-  test remains the go/no-go**. What it must still show: reliable triggering from ~8 ft
+  test remains the go/no-go**. What is unproven is now narrowly **optical** — range,
+  aim and coverage — rather than anything in the software or the protocol. What it must still show: reliable triggering from ~8 ft
   up, aimed down, with candles at worst-case step positions and orientations, held at
   unpredictable angles by moving cast.
 - The emitter head (6 emitters) is not mounted on the tower yet — planned for the
@@ -163,5 +170,6 @@ fleet's IR method:
 - **Emitter head current** — sets whether one AO3400A channel suffices or the array is
   split across J_IR0+J_IR1 (or an IRLB8721 substituted). Measure when the head is built.
 - **Tower count** — one covers most stages; two adds redundancy and edge fill.
-- **Held-look rates** — `max_hz` per channel in `config.candles.yaml` is still a guess;
-  tune it against the choreography with `--watch` during the hit-rate test.
+- **Held-look rates** — the `rate` model itself is proven from the desk, but the
+  `max_hz` values in `config.candles.yaml` have not been tuned against the actual
+  choreography at tower distance. Adjust with `--watch` during the hit-rate test.

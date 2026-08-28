@@ -58,10 +58,12 @@ Channels 7+ are free for expansion.
 > `TIMER_4H`/`TIMER_8H` on ch 10/11, but those codes were placeholders and never
 > existed on this remote.
 >
-> **Verified against the real candles (2026-08-27):** all six codes trigger the units,
-> and `Candle` is the flickering flame effect while `Light` is a constant glow. What is
-> *not* yet proven is range and aim from the tower — see the IR hit-rate test in
-> `UNIFIED-DESIGN.md`. The `max_hz` values below are still first guesses.
+> **Verified from the desk (2026-08-27):** this patch has been driven with **QLC+ over
+> Art-Net** into the daemon against the real candles — all six codes trigger the units,
+> `Candle` is the flickering flame effect and `Light` is a constant glow, and the
+> held-look model behaves as described below. What is *not* yet proven is range and aim
+> from the tower (see the IR hit-rate test in `UNIFIED-DESIGN.md`), and the `max_hz`
+> values below have not been tuned against the real choreography.
 
 ### The held-look model (what the desk should send)
 
