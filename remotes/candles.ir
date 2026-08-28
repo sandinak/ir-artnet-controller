@@ -1,57 +1,53 @@
 Filetype: IR signals file
 Version: 1
 #
-# PLACEHOLDER candle-remote codes. REPLACE these with your real Flipper capture:
-#   Flipper -> Infrared -> Learn New Remote -> press each candle-remote button
-#   -> name it EXACTLY as below (ON, OFF, DIM_UP, ...) -> Save.
-#   Copy the resulting .ir here (keep the signal names so config.candles.yaml matches).
-# If Flipper can't decode a button, capture it as RAW -- it still transmits.
+# Flameless candle remote — REAL CAPTURE (Flipper Zero, NEC, address 0x00).
+# Six buttons; the names below are the Flipper's own, and the DMX cue maps
+# reference them verbatim (candles:On, candles:Candle, ...). Re-capturing the
+# remote and dropping the file in here needs no renaming.
 #
-name: ON
+#   On       0x45   all candles on
+#   Off      0x47   all candles off
+#   Candle   0x16   flicker mode
+#   Light    0x0D   steady mode
+#   Dim      0x0C   nudge dimmer
+#   Brighten 0x5E   nudge brighter
+#
+# This remote has NO timer buttons -- the old TIMER_4H/TIMER_8H placeholders
+# were invented, and the cue maps no longer reference them.
+#
+name: On
 type: parsed
 protocol: NEC
 address: 00 00 00 00
-command: 01 00 00 00
+command: 45 00 00 00
 #
-name: OFF
+name: Off
 type: parsed
 protocol: NEC
 address: 00 00 00 00
-command: 02 00 00 00
+command: 47 00 00 00
 #
-name: DIM_UP
+name: Candle
 type: parsed
 protocol: NEC
 address: 00 00 00 00
-command: 03 00 00 00
+command: 16 00 00 00
 #
-name: DIM_DOWN
+name: Light
 type: parsed
 protocol: NEC
 address: 00 00 00 00
-command: 04 00 00 00
+command: 0D 00 00 00
 #
-name: FLICKER
+name: Dim
 type: parsed
 protocol: NEC
 address: 00 00 00 00
-command: 05 00 00 00
+command: 0C 00 00 00
 #
-name: STEADY
+name: Brighten
 type: parsed
 protocol: NEC
 address: 00 00 00 00
-command: 06 00 00 00
-#
-name: TIMER_4H
-type: parsed
-protocol: NEC
-address: 00 00 00 00
-command: 07 00 00 00
-#
-name: TIMER_8H
-type: parsed
-protocol: NEC
-address: 00 00 00 00
-command: 08 00 00 00
-#
+command: 5E 00 00 00

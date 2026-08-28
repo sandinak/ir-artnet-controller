@@ -234,7 +234,7 @@ series string from it and drop the per-string resistor.
 # so that /dev/lirc0 exists.  Confirm first:
 ls -l /dev/lirc0
 
-python3 -m ir_artnet --config config.yaml --send candles:ON
+python3 -m ir_artnet --config config.candles.yaml --send candles:On
 
 # If you switched transmitter.backend to pigpio, start pigpiod instead:
 #   sudo systemctl enable --now pigpiod

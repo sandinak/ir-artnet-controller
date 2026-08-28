@@ -398,9 +398,9 @@ value, the action the daemon computes from it, and transmit counters:
 
 ```
 [tx 12  drop 0  coal 34  preempt 1]  frame=512B
-   ch1   rate candles:ON v=200 @3.80Hz
-   ch2   rate candles:OFF v=0 off PRIO
-   ch10  idx sel=0->— GO[11]=0
+   ch1   rate candles:On v=200 @3.80Hz
+   ch2   rate candles:Off v=0 off PRIO
+   ch3   rate candles:Candle v=0 off
 ```
 
 | Symptom | Cause / fix |

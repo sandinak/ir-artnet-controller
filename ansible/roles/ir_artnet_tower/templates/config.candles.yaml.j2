@@ -17,18 +17,18 @@ ir_files:
 # Held-look cues (rate): DMX value scales the retransmit rate so cast turning
 # in place catch the IR as they come around. See DMX-CHART.md.
 channels:
-  - channel: 1            # ALL ON — hold the look
+  - channel: 1            # ALL ON (On) — hold the look
     mode: rate
-    command: "candles:ON"
+    command: "candles:On"
     floor: 8
     min_hz: 0.5
     max_hz: {{ candle_on_max_hz | default(6) }}
     curve: 2.0
     jitter_ms: {{ candle_jitter_ms | default(30) }}
 
-  - channel: 2            # ALL OFF — hold during blackout
+  - channel: 2            # ALL OFF (Off) — hold during blackout
     mode: rate
-    command: "candles:OFF"
+    command: "candles:Off"
     priority: true        # blackout preempts queued ON/flicker pulses
     floor: 8
     min_hz: 0.5
@@ -36,42 +36,35 @@ channels:
     curve: 2.0
     jitter_ms: {{ candle_jitter_ms | default(30) }}
 
-  - channel: 3            # FLICKER — hold
+  - channel: 3            # CANDLE / flicker — hold
     mode: rate
-    command: "candles:FLICKER"
+    command: "candles:Candle"
     floor: 8
     min_hz: 0.5
     max_hz: 4
     curve: 2.0
     jitter_ms: {{ candle_jitter_ms | default(30) }}
 
-  - channel: 4            # STEADY — hold
+  - channel: 4            # LIGHT / steady — hold
     mode: rate
-    command: "candles:STEADY"
+    command: "candles:Light"
     floor: 8
     min_hz: 0.5
     max_hz: 4
     curve: 2.0
     jitter_ms: {{ candle_jitter_ms | default(30) }}
 
-  - channel: 5            # DIM UP (hold)
+  - channel: 5            # BRIGHTEN (hold)
     mode: rate
-    command: "candles:DIM_UP"
+    command: "candles:Brighten"
     floor: 1
     min_hz: 0
     max_hz: 5
 
-  - channel: 6            # DIM DOWN (hold)
+  - channel: 6            # DIM (hold)
     mode: rate
-    command: "candles:DIM_DOWN"
+    command: "candles:Dim"
     floor: 1
     min_hz: 0
     max_hz: 5
 
-  - channel: 10           # TIMER selector
-    mode: index
-    go_channel: 11
-    go_threshold: 128
-    table:
-      "1-127":   "candles:TIMER_4H"
-      "128-255": "candles:TIMER_8H"

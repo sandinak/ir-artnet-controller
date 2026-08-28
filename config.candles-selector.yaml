@@ -1,14 +1,12 @@
 # Generated from remotes/candles.ir — selector (fixture) personality.
-# DMX ch1=Select(0=none 1..8=code)  ch2=Rate  ch3=Count(0=cont)  ch4=GO
+# DMX ch1=Select(0=none 1..6=code)  ch2=Rate  ch3=Count(0=cont)  ch4=GO
 # Value -> code map:
-#     1 = candles:ON
-#     2 = candles:OFF
-#     3 = candles:DIM_UP
-#     4 = candles:DIM_DOWN
-#     5 = candles:FLICKER
-#     6 = candles:STEADY
-#     7 = candles:TIMER_4H
-#     8 = candles:TIMER_8H
+#     1 = candles:On
+#     2 = candles:Off
+#     3 = candles:Candle
+#     4 = candles:Light
+#     5 = candles:Dim
+#     6 = candles:Brighten
 artnet:
   universe: 0
   bind_ip: 0.0.0.0
@@ -33,12 +31,10 @@ channels:
   floor: 1
   repeats: 1
   table:
-    1: candles:ON
-    2: candles:OFF
-    3: candles:DIM_UP
-    4: candles:DIM_DOWN
-    5: candles:FLICKER
-    6: candles:STEADY
-    7: candles:TIMER_4H
-    8: candles:TIMER_8H
+    1: candles:On
+    2: candles:Off
+    3: candles:Candle
+    4: candles:Light
+    5: candles:Dim
+    6: candles:Brighten
 

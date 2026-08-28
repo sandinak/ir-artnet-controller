@@ -10,13 +10,13 @@ Four hops, remote → desk:
 
 ```
   1. CAPTURE   Flipper Zero learns a remote button   →  a named signal in a .ir file
-                 (e.g. the "ON" button              →  name: ON  in remotes/candles.ir)
+                 (e.g. the "On" button              →  name: On  in remotes/candles.ir)
 
-  2. NAME      You keep that signal name             →  "candles:ON"
-                 (file key "candles" + signal "ON")     (file key set in ir_files:)
+  2. NAME      You keep that signal name             →  "candles:On"
+                 (file key "candles" + signal "On")     (file key set in ir_files:)
 
   3. MAP       config.candles.yaml ties a DMX         →  channel 1, mode threshold,
-                 channel + trigger to that command        command: "candles:ON"
+                 channel + trigger to that command        command: "candles:On"
 
   4. FIRE      Desk pushes channel 1 past 50%         →  daemon transmits ON via
                                                           ir-ctl / gpio-ir-tx on GPIO18
@@ -29,13 +29,14 @@ config. Everything else (DMX channel, trigger style, burst count) is just config
 ### Capture procedure (do this once, with the real remote)
 
 1. Flipper → **Infrared → Learn New Remote**; press a candle-remote button.
-2. Name it **exactly** as the chart's *Command* column (`ON`, `OFF`, `DIM_UP`, …).
+2. Name it clearly (`On`, `Off`, `Candle`, `Light`, `Dim`, `Brighten` — the names the
+   shipped capture uses). The chart's *Command* column follows the capture, so if you
+   name a button differently, change it in `config.candles.yaml` to match.
 3. Save; repeat for every button you want on the desk.
-4. Copy the Flipper's `.ir` into `remotes/candles.ir` (replace the placeholder file,
-   keeping the names). If a button won't decode, capture it as **RAW** — it still
-   transmits.
+4. Copy the Flipper's `.ir` into `remotes/candles.ir`, keeping the button names. If a
+   button won't decode, capture it as **RAW** — it still transmits.
 5. Verify: `python3 -m ir_artnet --config config.candles.yaml --list` should print
-   `candles:ON`, `candles:OFF`, … Then bench-test one: `--send candles:ON`.
+   `candles:On`, `candles:Off`, … Then bench-test one: `--send candles:On`.
 
 ## The patch chart
 
@@ -43,20 +44,23 @@ Universe **0** (set `artnet.universe` to the tower's universe). Channels are 1-b
 
 | DMX ch | Function | Mode | Held level does… | Command |
 |:------:|----------|------|------------------|---------|
-| **1** | All candles **ON** | rate (held look) | value scales resend rate: ~3% = 0.5×/s … full = 6×/s | `candles:ON` |
-| **2** | All candles **OFF** | rate (held look) | hold during blackout so late-turning candles still go dark | `candles:OFF` |
-| **3** | **Flicker** | rate (held look) | hold the flicker look; value = resend rate | `candles:FLICKER` |
-| **4** | **Steady** | rate (held look) | hold the steady look; value = resend rate | `candles:STEADY` |
-| **5** | **Dim up** | rate | fader = presses/s from 0 (up to 5) while raised | `candles:DIM_UP` |
-| **6** | **Dim down** | rate | fader = presses/s from 0 (up to 5) while raised | `candles:DIM_DOWN` |
-| **10** | Timer **selector** | index | value picks 1–127 → 4H, 128–255 → 8H | (see ch 11) |
-| **11** | Timer **GO** | index trigger | rising edge fires ch-10's pick once | `TIMER_4H/8H` |
+| **1** | All candles **On** | rate (held look) | value scales resend rate: ~3% = 0.5×/s … full = 6×/s | `candles:On` |
+| **2** | All candles **Off** | rate (held look) | hold during blackout so late-turning candles still go dark | `candles:Off` |
+| **3** | **Candle** (flicker mode) | rate (held look) | hold the flicker look; value = resend rate | `candles:Candle` |
+| **4** | **Light** (steady mode) | rate (held look) | hold the steady look; value = resend rate | `candles:Light` |
+| **5** | **Brighten** | rate | fader = presses/s from 0 (up to 5) while raised | `candles:Brighten` |
+| **6** | **Dim** | rate | fader = presses/s from 0 (up to 5) while raised | `candles:Dim` |
 
-Channels 7–9 and 12+ are free for expansion.
+Channels 7+ are free for expansion.
+
+> The six functions above are **every button on the physical remote**. It has no timer
+> buttons, so there are no timer cues — an earlier draft of this chart patched
+> `TIMER_4H`/`TIMER_8H` on ch 10/11, but those codes were placeholders and never
+> existed on this remote.
 
 ### The held-look model (what the desk should send)
 
-The state cues (ON / OFF / FLICKER / STEADY) are **held looks**: park the channel at a
+The state cues (On / Off / Candle / Light) are **held looks**: park the channel at a
 level for the whole look and the daemon keeps **re-transmitting** that command while
 it's held, so cast turning in place catch it as they come around. The DMX **value sets
 the resend rate**, not just on/off:
@@ -70,13 +74,17 @@ the resend rate**, not just on/off:
 Fader feel is shaped by `curve` (2.0 = finer control low down), and `jitter_ms`
 randomises timing slightly so two towers don't fire in perfect lockstep. Because these
 re-send continuously, use **discrete** candle commands (separate ON and OFF), never a
-single toggle button — a repeated toggle would flip-flop.
+single toggle button — a repeated toggle would flip-flop. This remote is well behaved
+here: `On` and `Off` are discrete buttons, and `Candle`/`Light` select a mode rather
+than toggling one.
 
 The three modes in one line each:
 
 - **rate / held look** — level → resend rate; hold to keep candles in a state.
 - **rate / dimming** — `min_hz: 0`, so the fader is a speed control from zero.
 - **index + GO** — one channel's value selects a command, a GO channel fires it once.
+  (Not used by the shipped candle patch, which has few enough buttons to give each its
+  own channel; it stays available for gear with more commands, like the projector.)
 
 ### One code at a time, and who wins
 
@@ -84,13 +92,13 @@ The daemon transmits **one IR code at a time** (single serial worker + minimum g
 so simultaneous channel fires are queued, not overlapped. Two behaviours shape that
 queue:
 
-- **Priority** — a channel with `priority: true` (the blackout **OFF**, ch 2) jumps
+- **Priority** — a channel with `priority: true` (the blackout **Off**, ch 2) jumps
   ahead of any queued ON/flicker pulses, so a blackout takes hold fast. It preempts the
   *queue*, not a code already mid-transmit (≤ ~130 ms).
 - **Coalescing** — held-look channels keep at most **one** pending shot of themselves
   (latest wins), so a fast-held look can't flood the queue with stale repeats.
 
-Avoid holding contradictory looks at once (e.g. ON and OFF together) — the daemon will
+Avoid holding contradictory looks at once (e.g. On and Off together) — the daemon will
 faithfully alternate them and the candles will flip-flop. Use the cues as mutually
 exclusive states.
 
@@ -136,12 +144,14 @@ python3 -m ir_artnet --gen-config --ir remotes/candles.ir --key candles \
     --universe 0 > config.candles-selector.yaml
 ```
 
-That prints the fixture config plus a value map, e.g. for the sample candle file:
+That prints the fixture config plus a value map — for the shipped candle capture:
 
 ```
-# DMX ch1=Select(0=none 1..8=code)  ch2=Rate  ch3=Count(0=cont)  ch4=GO
-#   1 = candles:ON      3 = candles:DIM_UP    5 = candles:FLICKER   7 = candles:TIMER_4H
-#   2 = candles:OFF     4 = candles:DIM_DOWN  6 = candles:STEADY    8 = candles:TIMER_8H
+# DMX ch1=Select(0=none 1..6=code)  ch2=Rate  ch3=Count(0=cont)  ch4=GO
+# Value -> code map:
+#     1 = candles:On       4 = candles:Light
+#     2 = candles:Off      5 = candles:Dim
+#     3 = candles:Candle   6 = candles:Brighten
 ```
 
 Re-capture the remote → re-run `--gen-config` → the map updates itself. Keep a printed
@@ -157,7 +167,7 @@ to see Select→code, Rate, Count and GO live).
 ## QLC+ patching (fleet desk)
 
 Patch an **Art-Net output universe** to the tower's universe, then drive these as
-**generic dimmer** channels. For the momentary cues, a **button → scene** that sets the
+**generic dimmer** channels (six channels, 1–6). For the momentary cues, a **button → scene** that sets the
 channel to 255 (with a short flash/back-to-0) is the cleanest; for dim up/down use a
 fader. Keep the tower on the same universe number in QLC+ and in `artnet.universe`.
 

@@ -161,7 +161,7 @@ CFG_SEL = {
         "mode": "selector", "name": "IR",
         "select_channel": 1, "rate_channel": 2, "count_channel": 3, "go_channel": 4,
         "min_hz": 5, "max_hz": 40, "floor": 1,
-        "table": {1: "candles:ON", 2: "candles:OFF", 3: "candles:FLICKER"},
+        "table": {1: "candles:On", 2: "candles:Off", 3: "candles:Candle"},
     }],
 }
 
@@ -179,23 +179,23 @@ def test_selector():
         b[0], b[1], b[2], b[3] = sel, rate, count, go
         ctrl.on_dmx(0, bytes(b))
 
-    # one-shot: select OFF (code 2), count=1, GO rising -> exactly one send
+    # one-shot: select Off (code 2), count=1, GO rising -> exactly one send
     frame(2, 255, 1, 0)
     frame(2, 255, 1, 255)
     time.sleep(0.15)
-    off = [x for x in labels if "OFF" in x]
+    off = [x for x in labels if ":Off@" in x]
     assert len(off) == 1, off
 
-    # continuous: select ON (code 1), count=0, hold GO -> repeated sends
+    # continuous: select On (code 1), count=0, hold GO -> repeated sends
     labels.clear()
     frame(1, 255, 0, 0)        # GO low first
     frame(1, 255, 0, 255)      # GO rises -> continuous
     time.sleep(0.25)
     frame(1, 255, 0, 0)        # release -> stop
-    on = [x for x in labels if "ON" in x]
+    on = [x for x in labels if ":On@" in x]
     assert len(on) >= 3, on
-    # exclusivity: never an OFF while ON is selected
-    assert not any("OFF" in x for x in on)
+    # exclusivity: never an Off while On is selected
+    assert not any(":Off@" in x for x in labels)
     ctrl.close()
     print(f"  selector OK (one-shot=1, continuous={len(on)}, exclusive)")
 
@@ -203,9 +203,9 @@ def test_selector():
 def test_gen_config():
     from ir_artnet.__main__ import _gen_selector_config
     cfg, vmap = _gen_selector_config("remotes/candles.ir", key="candles")
-    assert vmap[1] == "candles:ON" and vmap[2] == "candles:OFF", vmap
+    assert vmap[1] == "candles:On" and vmap[2] == "candles:Off", vmap
     assert cfg["channels"][0]["mode"] == "selector"
-    assert cfg["channels"][0]["table"][1] == "candles:ON"
+    assert cfg["channels"][0]["table"][1] == "candles:On"
     print(f"  gen-config OK ({len(vmap)} codes -> DMX values 1..{len(vmap)})")
 
 
