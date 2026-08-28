@@ -451,7 +451,7 @@ ir_artnet/
 ansible/           standalone deploy role (ir_artnet_tower) + playbook
 remotes/*.ir       captured remotes (candles, fogger, projector)
 examples/          status-LED demo (gpiozero)
-config*.yaml       mappings — base, candles, candles-selector
+config*.yaml       mappings — base, candles (6ch), candles-2ch (field-tested), candles-selector
 selftest.py        offline end-to-end test
 ir-artnet.service  systemd unit
 ```

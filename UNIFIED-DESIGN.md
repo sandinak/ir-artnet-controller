@@ -127,6 +127,7 @@ fleet's IR method:
 | `breadboard-ir.svg` | breadboard validation wiring (step 1 of the sequence) |
 | `ansible/` | standalone deploy role (`ir_artnet_tower`) + playbook for a single Pi |
 | `config.yaml` | ArtNet universe, transmit backend, channel→command map |
+| `config.candles-2ch.yaml` | **field-tested** candle patch (ch1 function, ch2 repeat) |
 | `ir_artnet/` | the service (parse / protocols / transmit backends / ArtNet / controller) |
 | `examples/status_leds.py` | status-LED demo (gpiozero) |
 | `selftest.py` | offline end-to-end test (no Pi required) |
@@ -145,9 +146,14 @@ fleet's IR method:
   universe filtering, the channel map, the trigger modes, the transmit queue, and
   `ir-ctl` output. Capture → parse → encode → map → transmit → candle response is
   proven end to end; none of it is theoretical any more.
-- Which means the **held-look (`rate`) model is validated in practice**, not just in
-  `selftest.py` against a fake transmitter — the part of the design most likely to have
-  been wrong on contact with real gear.
+- The patch used was a **two-channel personality** — ch1 = function, ch2 = repeat —
+  which is `selector` mode with Rate and GO omitted. It is now checked in as
+  `config.candles-2ch.yaml` and covered by `selftest.py`; it was neither before, despite
+  being the only personality with real-world evidence behind it.
+- **One shot was usually enough.** The elaborate retransmission machinery (held looks,
+  rate scaling, coalescing) is available but did not prove necessary at the range
+  tested. Whether that survives tower distance is exactly what the hit-rate test decides
+  — do not design it out yet.
 - **`Candle` = flicker mode, `Light` = steady.** Verified on the units, so the
   operator-facing descriptions in `DMX-CHART.md` are fact rather than inference.
 - This remote has **no timer buttons**; the earlier `TIMER_4H`/`TIMER_8H` cues were

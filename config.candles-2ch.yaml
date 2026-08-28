@@ -1,0 +1,58 @@
+# =====================================================================
+#  Tower IR blaster — candles, TWO-CHANNEL personality
+#  Run:  python3 -m ir_artnet --config config.candles-2ch.yaml
+#
+#  This is the patch that was field-tested from QLC+ on 2026-08-27 and is
+#  the recommended starting point. It is the `selector` mode with the Rate
+#  and GO channels left out, which the daemon treats as: fixed rate, and
+#  "armed whenever a code is selected".
+#
+#     ch1  FUNCTION   0 = none (idle)
+#                     1 = On        4 = Light     (steady)
+#                     2 = Off       5 = Dim
+#                     3 = Candle    6 = Brighten  (flicker = 3)
+#     ch2  REPEAT     0 = continuous while selected
+#                     N = send exactly N times
+#
+#  In practice 1 shot has been enough at close range; raise REPEAT (or
+#  max_hz below) only if the hit-rate test at tower distance needs it.
+#
+#  ⚠️  RE-FIRING THE SAME FUNCTION: with no GO channel, a shot is armed by
+#  the selection *changing*. Holding ch1 at the same value will not fire
+#  again. To repeat a cue, drop ch1 to 0 (or another value) and back. If
+#  you need a dedicated re-trigger, add `go_channel:` and use the
+#  4-channel personality in config.candles-selector.yaml instead.
+# =====================================================================
+
+artnet:
+  universe: 0                 # set to the tower's Art-Net universe
+  bind_ip: "0.0.0.0"
+  short_name: "Tower-IR"
+  long_name: "Tower IR blaster (candles, 2ch)"
+
+transmitter:
+  backend: ir-ctl             # canonical: gpio-ir-tx + ir-ctl
+  lirc_device: /dev/lirc0     # dtoverlay=gpio-ir-tx,gpio_pin=18 in config.txt
+  gpio_pin: 18                # (used only if backend: pigpio)
+  min_gap_ms: 60
+
+ir_files:
+  candles: "remotes/candles.ir"
+
+channels:
+  - mode: selector
+    name: IR
+    select_channel: 1         # FUNCTION
+    count_channel: 2          # REPEAT (0 = continuous)
+    # No rate_channel: pacing is fixed at max_hz below.
+    # No go_channel:   selecting a function arms it.
+    max_hz: 8                 # pace for REPEAT > 1 and for continuous
+    floor: 1
+    repeats: 1                # IR frames per send (1 has been enough)
+    table:
+      1: "candles:On"
+      2: "candles:Off"
+      3: "candles:Candle"     # flicker mode
+      4: "candles:Light"      # steady mode
+      5: "candles:Dim"
+      6: "candles:Brighten"

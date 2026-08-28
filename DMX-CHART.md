@@ -121,11 +121,35 @@ resends/s) or **`repeats`** (more IR shots per resend) in `config.candles.yaml`.
 feels "busy" or candles double-trigger, lower them. Start around `max_hz: 6`,
 `repeats: 1` and adjust against the actual choreography.
 
-## Selector / fixture mode (recommended) — one code at a time by design
+## Two-channel personality (field-tested — start here)
 
-The per-channel chart above is easy to busk but lets you *hold two contradictory
-cues at once* (ON and OFF), which flip-flops the candles. The **selector** personality
-removes that failure mode entirely: a single **Select** channel points at exactly one
+This is the patch that was driven from QLC+ against the real candles on 2026-08-27.
+It is the `selector` mode with **Rate and GO left out**, which the daemon reads as
+"fixed rate, armed whenever a code is selected" — so the whole remote fits on two
+channels. Config: [`config.candles-2ch.yaml`](config.candles-2ch.yaml).
+
+| DMX ch | Function | Values |
+|:------:|----------|--------|
+| **1** | **Function** | `0` = idle · `1` On · `2` Off · `3` Candle (flicker) · `4` Light (steady) · `5` Dim · `6` Brighten |
+| **2** | **Repeat** | `0` = continuous while selected · `N` = send exactly N times |
+
+In testing **one shot was usually enough**, so `Repeat: 1` is a sensible default; raise
+it only if the hit-rate test at tower distance shows misses.
+
+> ⚠️ **Re-firing the same function.** With no GO channel a shot is armed by the
+> selection *changing*. Parking ch 1 at the same value will **not** fire again — drop it
+> to `0` (or another function) and back. If a cue needs a dedicated re-trigger, use the
+> four-channel personality below, which has a real GO edge.
+
+Like the four-channel version, this cannot hold two contradictory cues at once: exactly
+one code is ever latched, so a desk mistake sends the wrong code, never two.
+
+## Selector / fixture mode — one code at a time, with Rate and GO
+
+The per-channel chart further up is easy to busk but lets you *hold two contradictory
+cues at once* (On and Off), which flip-flops the candles. The **selector** personality
+removes that failure mode entirely, and adds live Rate and a GO edge on top of the
+two-channel patch above: a single **Select** channel points at exactly one
 code, so a desk mistake can send the wrong code but never two at once. Control
 channels decide how it's sent. This is a normal 4-channel DMX fixture.
 

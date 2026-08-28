@@ -200,6 +200,82 @@ def test_selector():
     print(f"  selector OK (one-shot=1, continuous={len(on)}, exclusive)")
 
 
+CFG_2CH = {
+    "_base_dir": ".",
+    "artnet": {"universe": 0},
+    "transmitter": {"min_gap_ms": 0},
+    "ir_files": {"candles": "remotes/candles.ir"},
+    "channels": [{
+        "mode": "selector", "name": "IR",
+        "select_channel": 1,        # function
+        "count_channel": 2,         # repeat (0 = continuous)
+        # no rate_channel -> fixed max_hz; no go_channel -> selection arms it
+        "max_hz": 20, "floor": 1,
+        "table": {1: "candles:On", 2: "candles:Off", 3: "candles:Candle"},
+    }],
+}
+
+
+def test_selector_2ch():
+    """The field-tested patch: ch1 = function, ch2 = repeat, no Rate, no GO.
+
+    The daemon treats a missing go_channel as "armed whenever a code is
+    selected", so a shot is triggered by the selection *changing*. That is the
+    behaviour the desk relies on, and the re-fire quirk operators need to know
+    about, so both are pinned here.
+    """
+    ctrl = Controller(CFG_2CH)
+    ctrl.tx.transmit = lambda *a, **k: None
+    labels = []
+    orig = ctrl.txq.submit
+    ctrl.txq.submit = lambda job, **kw: (labels.append(job.label), orig(job, **kw))[1]
+    ctrl.start()
+
+    def frame(sel=0, count=0):
+        b = bytearray(512)
+        b[0], b[1] = sel, count
+        ctrl.on_dmx(0, bytes(b))
+        time.sleep(0.20)
+
+    def shots():
+        got = list(labels)
+        labels.clear()
+        return got
+
+    frame(1, 1)                      # select On, repeat=1 -> exactly one shot
+    one = shots()
+    assert len(one) == 1, one
+    assert ":On@" in one[0], one
+
+    frame(1, 1)                      # same selection held -> does NOT re-fire
+    assert shots() == []
+
+    frame(0, 1)                      # back to idle...
+    shots()
+    frame(1, 1)                      # ...and reselect -> fires again
+    assert len(shots()) == 1
+
+    frame(3, 3)                      # repeat=3 -> exactly three shots
+    three = shots()
+    assert len(three) == 3, three
+    assert all(":Candle@" in x for x in three), three
+
+    frame(0, 0)
+    shots()
+    frame(2, 0)                      # repeat=0 -> continuous while selected
+    cont = shots()
+    # ~4 expected at 20 Hz over 0.2 s; assert only that it repeats, so a loaded
+    # CI runner can't turn a timing wobble into a red build.
+    assert len(cont) >= 2, cont
+
+    frame(0, 0)                      # deselect -> stops
+    assert shots() == []
+
+    ctrl.close()
+    print(f"  selector 2ch OK (one-shot=1, no re-fire on hold, "
+          f"count=3, continuous={len(cont)}, deselect stops)")
+
+
 def test_gen_config():
     from ir_artnet.__main__ import _gen_selector_config
     cfg, vmap = _gen_selector_config("remotes/candles.ir", key="candles")
@@ -228,6 +304,7 @@ if __name__ == "__main__":
     test_pipeline()
     test_queue_coalesce_priority()
     test_selector()
+    test_selector_2ch()
     test_gen_config()
     test_snapshot()
     print("ALL TESTS PASSED")
