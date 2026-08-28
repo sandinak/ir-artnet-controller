@@ -1,0 +1,34 @@
+name: Bug
+description: Something behaves differently than documented
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: The config and the command. `--watch` or `-v` output is the most useful thing you can paste.
+      render: shell
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Transmit backend
+      options: ["ir-ctl (gpio-ir-tx)", "pigpio", "dry mode / no hardware", "not sure"]
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: "Raspberry Pi 4, Pi OS Trixie, Python 3.11 — or: laptop, macOS, dry mode"
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before filing
+      options:
+        - label: "`python selftest.py` passes on my checkout"
+        - label: "`--list` shows the command I expect to fire"

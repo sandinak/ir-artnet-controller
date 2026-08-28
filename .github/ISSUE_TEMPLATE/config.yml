@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Operation and DMX patching
+    url: https://github.com/sandinak/ir-artnet-controller/blob/main/DMX-CHART.md
+    about: Channel charts, the trigger modes, and QLC+ / unicast Art-Net notes.
+  - name: Hardware — schematic, BOM, emitter head
+    url: https://github.com/sandinak/ir-artnet-controller/blob/main/hardware.md
+    about: Driver stage, parts list, LED array maths and the build checklist.
+  - name: Design decisions and validation status
+    url: https://github.com/sandinak/ir-artnet-controller/blob/main/UNIFIED-DESIGN.md
+    about: Source of truth — what is proven against real hardware and what is not.

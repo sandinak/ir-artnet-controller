@@ -1,0 +1,40 @@
+name: Hardware validation
+description: A physical test whose result gates a design decision
+title: "[hw] "
+labels: ["hardware", "validation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For tests that must happen against real hardware. Record the *result*
+        here, then update the **Validation status** section of `UNIFIED-DESIGN.md` —
+        that document is the source of truth, this issue is the working notes.
+  - type: input
+    id: gates
+    attributes:
+      label: What decision does this gate?
+      description: If nothing is blocked on the answer, this probably isn't a validation issue.
+      placeholder: "Towers-only vs hybrid; whether one AO3400A channel suffices"
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Test setup
+      description: Be specific about distance, height, aim and geometry — a bench result and a tower result are different claims.
+      placeholder: |
+        Blaster: 8 emitters at tower height (~8 ft), aimed down at the deck
+        Targets: candles at the worst-case step positions, held at varied angles
+        Driven from: QLC+ over Art-Net, config.candles-2ch.yaml
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Result
+      description: Include `--watch` counters if relevant (tx / drop / coal / preempt) — they distinguish "not sent" from "sent but missed".
+  - type: textarea
+    id: conclusion
+    attributes:
+      label: Conclusion / what changes
+      description: What this settles, and what still isn't proven.
