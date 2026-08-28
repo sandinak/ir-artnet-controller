@@ -102,9 +102,11 @@ fleet's IR method:
 ## Development sequence (unchanged, with this work folded in)
 
 1. **Breadboard validation** — Pi + AO3400A channel + emitter, `ir-ctl` via
-   `gpio-ir-tx`. Prove the ArtNet service triggers a shot.
+   `gpio-ir-tx`. Prove the ArtNet service triggers a shot. **Codes validated
+   2026-08-27** — see *Validation status* below.
 2. **IR hit-rate test (explicit gate)** — tower-height blaster vs candles at worst-case
-   step positions. **Decide towers-only vs hybrid here.**
+   step positions. **Decide towers-only vs hybrid here.** *Still open;* the emitter head
+   goes up on the tower the weekend of 2026-08-29.
 3. **KiCad layout proof** — the universal HAT (both populations) and the pod.
 4. **Hand-soldered prototype** — Perma-Proto per `hardware.md` / `steppi-layout.svg`.
 5. **Production run** — bare boards via JLCPCB; provision with Ansible
@@ -129,9 +131,37 @@ fleet's IR method:
 | `examples/status_leds.py` | status-LED demo (gpiozero) |
 | `selftest.py` | offline end-to-end test (no Pi required) |
 
+## Validation status (2026-08-27)
+
+**Confirmed against real hardware:**
+
+- The candle remote is captured and in the repo (`remotes/candles.ir`): NEC, address
+  `0x00`, six buttons — `On` `0x45`, `Off` `0x47`, `Candle` `0x16`, `Light` `0x0D`,
+  `Dim` `0x0C`, `Brighten` `0x5E`. All six re-encode to the captured bytes with valid
+  NEC checksums.
+- **The codes drive the real candles**, tested extensively at better than bench range.
+  Capture → parse → encode → transmit is proven end to end; this is no longer a
+  theoretical chain.
+- **`Candle` = flicker mode, `Light` = steady.** Verified on the units, so the
+  operator-facing descriptions in `DMX-CHART.md` are fact rather than inference.
+- This remote has **no timer buttons**; the earlier `TIMER_4H`/`TIMER_8H` cues were
+  placeholders and have been removed from every cue map.
+
+**Not yet proven — the gate is still open:**
+
+- The test was *not* at tower height with the real step geometry, so the **IR hit-rate
+  test remains the go/no-go**. What it must still show: reliable triggering from ~8 ft
+  up, aimed down, with candles at worst-case step positions and orientations, held at
+  unpredictable angles by moving cast.
+- The emitter head (6 emitters) is not mounted on the tower yet — planned for the
+  weekend of **2026-08-29**.
+
 ## Open items to confirm
 
-- **IR hit-rate result** — the gate for towers-only vs hybrid.
+- **IR hit-rate result** — the gate for towers-only vs hybrid. Codes and candle response
+  are proven; what is unproven is *range and aim from the tower*.
 - **Emitter head current** — sets whether one AO3400A channel suffices or the array is
-  split across J_IR0+J_IR1 (or an IRLB8721 substituted).
+  split across J_IR0+J_IR1 (or an IRLB8721 substituted). Measure when the head is built.
 - **Tower count** — one covers most stages; two adds redundancy and edge fill.
+- **Held-look rates** — `max_hz` per channel in `config.candles.yaml` is still a guess;
+  tune it against the choreography with `--watch` during the hit-rate test.

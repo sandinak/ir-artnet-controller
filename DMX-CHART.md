@@ -57,6 +57,11 @@ Channels 7+ are free for expansion.
 > buttons, so there are no timer cues — an earlier draft of this chart patched
 > `TIMER_4H`/`TIMER_8H` on ch 10/11, but those codes were placeholders and never
 > existed on this remote.
+>
+> **Verified against the real candles (2026-08-27):** all six codes trigger the units,
+> and `Candle` is the flickering flame effect while `Light` is a constant glow. What is
+> *not* yet proven is range and aim from the tower — see the IR hit-rate test in
+> `UNIFIED-DESIGN.md`. The `max_hz` values below are still first guesses.
 
 ### The held-look model (what the desk should send)
 
